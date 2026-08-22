@@ -196,144 +196,182 @@
     <div id="detailTrContent" style="font-size:14px;"></div>
     <div class="modal-footer">
       <button class="btn btn-outline" onclick="closeModal('modalDetailTr')">Tutup</button>
-      <button class="btn btn-primary" onclick="showToast('Fitur cetak segera tersedia','warning')">🖨️ Cetak Kwitansi</button>
+      <button class="btn btn-primary" onclick="window.print()">🖨️ Cetak Kwitansi</button>
     </div>
   </div>
 </div>
 
+<script src="../js/api.js"></script>
 <script src="../js/app.js"></script>
 <script>
-  const iconsT = { Plastik:'🧴', Kertas:'📰', Logam:'🔩', Organik:'🌿', Elektronik:'📱', Kaca:'🍶' };
-  const scT    = { Selesai:'success', Pending:'warning', Dibatalkan:'danger' };
-  let filteredTr = [...sampleTransaksi];
+  const scT = { Selesai:'success', Pending:'warning', Dibatalkan:'danger' };
+  let allTr = [];
+
+  // ---- LOAD DARI DATABASE ----
+  async function loadTransaksi() {
+    const q      = document.getElementById('searchTr').value;
+    const jenis  = document.getElementById('filterJenisTr').value;
+    const status = document.getElementById('filterStatusTr').value;
+    const dari   = document.getElementById('filterDari').value;
+    const sampai = document.getElementById('filterSampai').value;
+    const params = {};
+    if (q)      params.q      = q;
+    if (jenis)  params.jenis  = jenis;
+    if (status) params.status = status;
+    if (dari)   params.dari   = dari;
+    if (sampai) params.sampai = sampai;
+
+    try {
+      const res = await TransaksiAPI.getAll(params);
+      allTr     = res.data || [];
+      renderTransaksi(allTr);
+
+      // Ringkasan filter
+      const ring = document.getElementById('ringkasanFilter');
+      if (q || jenis || status || dari || sampai) {
+        ring.style.display = 'block';
+        document.getElementById('rfTotal').textContent = allTr.length;
+        document.getElementById('rfBerat').textContent =
+          allTr.reduce((s,t) => s + t.berat_kg, 0).toFixed(1);
+        document.getElementById('rfNilai').textContent =
+          formatRupiah(allTr.reduce((s,t) => s + t.total, 0));
+      } else {
+        ring.style.display = 'none';
+      }
+    } catch (err) {
+      showToast('Gagal memuat transaksi: ' + err.message, 'danger');
+    }
+  }
+
+  // ---- LOAD STATS ----
+  async function loadStats() {
+    try {
+      const res = await TransaksiAPI.getAll({});
+      const all = res.data || [];
+      document.getElementById('totalTrAll').textContent     = all.length;
+      document.getElementById('totalTrSelesai').textContent = all.filter(t=>t.status==='Selesai').length;
+      document.getElementById('totalTrPending').textContent = all.filter(t=>t.status==='Pending').length;
+      document.getElementById('totalTrBatal').textContent   = all.filter(t=>t.status==='Dibatalkan').length;
+    } catch (_) {}
+  }
 
   function renderTransaksi(data) {
     const tbody = document.getElementById('transaksiTable');
     tbody.innerHTML = '';
-
-    // Update stats
-    document.getElementById('totalTrAll').textContent     = sampleTransaksi.length;
-    document.getElementById('totalTrSelesai').textContent = sampleTransaksi.filter(t=>t.status==='Selesai').length;
-    document.getElementById('totalTrPending').textContent = sampleTransaksi.filter(t=>t.status==='Pending').length;
-    document.getElementById('totalTrBatal').textContent   = sampleTransaksi.filter(t=>t.status==='Dibatalkan').length;
 
     if (data.length === 0) {
       tbody.innerHTML = `<tr><td colspan="9" style="text-align:center; padding:50px; color:var(--text-muted);">
         <div style="font-size:48px; margin-bottom:10px;">📭</div>
         <div>Tidak ada transaksi yang sesuai filter</div>
       </td></tr>`;
+      document.getElementById('paginasiTr').textContent = '0 transaksi';
+      document.getElementById('tableInfo').textContent  = '0 hasil';
       return;
     }
 
-    data.forEach((t, idx) => {
+    data.forEach((t) => {
+      const jenisKey = (t.jenis_nama||'').toLowerCase();
+      const sc       = scT[t.status] || 'info';
       const tr = document.createElement('tr');
       tr.innerHTML = `
-        <td><strong>${t.id}</strong></td>
-        <td>${t.nasabah}</td>
-        <td><span class="trash-tag ${t.jenis.toLowerCase()}">${iconsT[t.jenis]||'♻️'} ${t.jenis}</span></td>
-        <td><strong>${t.berat} kg</strong></td>
-        <td>Rp ${Number(t.harga).toLocaleString('id-ID')}</td>
+        <td><strong>${t.kode}</strong></td>
+        <td>${t.nasabah_nama}</td>
+        <td><span class="trash-tag ${jenisKey}">${t.jenis_ikon||'♻️'} ${t.jenis_nama}</span></td>
+        <td><strong>${t.berat_kg} kg</strong></td>
+        <td>${formatRupiah(t.harga_kg)}</td>
         <td><strong style="color:var(--primary);">${formatRupiah(t.total)}</strong></td>
         <td>${formatDate(t.tanggal)}</td>
-        <td><span class="badge-status ${scT[t.status]}">● ${t.status}</span></td>
+        <td><span class="badge-status ${sc}">● ${t.status}</span></td>
         <td>
-          <button class="btn-icon" title="Detail" onclick="detailTr(${idx})">👁️</button>
-          ${t.status === 'Pending' ? `<button class="btn-icon" title="Konfirmasi" style="margin:0 4px;" onclick="konfirmasiTr(${idx})">✅</button>` : '<span style="width:34px;display:inline-block;"></span>'}
-          <button class="btn-icon" title="Hapus" onclick="hapusTr(${idx})">🗑️</button>
+          <button class="btn-icon" title="Detail" onclick="detailTr(${t.id})">👁️</button>
+          ${t.status === 'Pending'
+            ? `<button class="btn-icon" title="Konfirmasi" style="margin:0 4px;" onclick="konfirmasiTr(${t.id})">✅</button>`
+            : '<span style="width:34px;display:inline-block;"></span>'}
+          <button class="btn-icon" title="Hapus" onclick="hapusTr(${t.id})">🗑️</button>
         </td>
       `;
       tbody.appendChild(tr);
     });
 
-    document.getElementById('paginasiTr').textContent = `Menampilkan ${data.length} dari ${sampleTransaksi.length} transaksi`;
-    document.getElementById('tableInfo').textContent  = `${data.length} hasil ditemukan`;
+    document.getElementById('paginasiTr').textContent =
+      `Menampilkan ${data.length} transaksi`;
+    document.getElementById('tableInfo').textContent =
+      `${data.length} hasil ditemukan`;
   }
 
-  function applyFilter() {
-    const q      = document.getElementById('searchTr').value.toLowerCase();
-    const jenis  = document.getElementById('filterJenisTr').value;
-    const status = document.getElementById('filterStatusTr').value;
-    const dari   = document.getElementById('filterDari').value;
-    const sampai = document.getElementById('filterSampai').value;
-
-    filteredTr = sampleTransaksi.filter(t =>
-      (t.nasabah.toLowerCase().includes(q) || t.id.toLowerCase().includes(q)) &&
-      (!jenis  || t.jenis  === jenis) &&
-      (!status || t.status === status) &&
-      (!dari   || t.tanggal >= dari) &&
-      (!sampai || t.tanggal <= sampai)
-    );
-
-    renderTransaksi(filteredTr);
-
-    // Ringkasan filter
-    const ring = document.getElementById('ringkasanFilter');
-    if (q || jenis || status || dari || sampai) {
-      const totalBerat = filteredTr.reduce((s, t) => s + t.berat, 0);
-      const totalNilai = filteredTr.reduce((s, t) => s + t.total, 0);
-      ring.style.display = 'block';
-      document.getElementById('rfTotal').textContent = filteredTr.length;
-      document.getElementById('rfBerat').textContent = totalBerat.toFixed(1);
-      document.getElementById('rfNilai').textContent = formatRupiah(totalNilai);
-    } else {
-      ring.style.display = 'none';
-    }
-  }
+  function applyFilter() { loadTransaksi(); }
 
   function resetFilter() {
-    document.getElementById('searchTr').value         = '';
-    document.getElementById('filterJenisTr').value    = '';
-    document.getElementById('filterStatusTr').value   = '';
-    document.getElementById('filterDari').value       = '';
-    document.getElementById('filterSampai').value     = '';
-    filteredTr = [...sampleTransaksi];
-    renderTransaksi(filteredTr);
+    document.getElementById('searchTr').value        = '';
+    document.getElementById('filterJenisTr').value   = '';
+    document.getElementById('filterStatusTr').value  = '';
+    document.getElementById('filterDari').value      = '';
+    document.getElementById('filterSampai').value    = '';
+    loadTransaksi();
     document.getElementById('ringkasanFilter').style.display = 'none';
   }
 
-  function detailTr(idx) {
-    const t = filteredTr[idx];
-    document.getElementById('detailTrContent').innerHTML = `
-      <div style="text-align:center; margin-bottom:18px; padding:14px; background:#f1f8e9; border-radius:10px;">
-        <div style="font-size:40px;">${iconsT[t.jenis]||'♻️'}</div>
-        <h3 style="margin-top:6px;">${t.jenis}</h3>
-        <div style="font-size:22px; font-weight:700; color:var(--primary); margin-top:4px;">${formatRupiah(t.total)}</div>
-      </div>
-      <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px 20px; font-size:13.5px;">
-        <div><span style="color:var(--text-muted); font-size:11px;">ID TRANSAKSI</span><br><strong>${t.id}</strong></div>
-        <div><span style="color:var(--text-muted); font-size:11px;">STATUS</span><br><span class="badge-status ${scT[t.status]}">● ${t.status}</span></div>
-        <div><span style="color:var(--text-muted); font-size:11px;">NASABAH</span><br><strong>${t.nasabah}</strong></div>
-        <div><span style="color:var(--text-muted); font-size:11px;">TANGGAL</span><br><strong>${formatDate(t.tanggal)}</strong></div>
-        <div><span style="color:var(--text-muted); font-size:11px;">BERAT</span><br><strong>${t.berat} kg</strong></div>
-        <div><span style="color:var(--text-muted); font-size:11px;">HARGA/KG</span><br><strong>${formatRupiah(t.harga)}</strong></div>
-      </div>
-    `;
-    openModal('modalDetailTr');
+  // ---- DETAIL ----
+  async function detailTr(id) {
+    try {
+      const res = await TransaksiAPI.getById(id);
+      const t   = res.data;
+      const sc  = scT[t.status] || 'info';
+      document.getElementById('detailTrContent').innerHTML = `
+        <div style="text-align:center; margin-bottom:18px; padding:14px; background:#f1f8e9; border-radius:10px;">
+          <div style="font-size:40px;">${t.jenis_ikon||'♻️'}</div>
+          <h3 style="margin-top:6px;">${t.jenis_nama}</h3>
+          <div style="font-size:22px; font-weight:700; color:var(--primary); margin-top:4px;">${formatRupiah(t.total)}</div>
+        </div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px 20px; font-size:13.5px;">
+          <div><span style="color:var(--text-muted); font-size:11px;">ID TRANSAKSI</span><br><strong>${t.kode}</strong></div>
+          <div><span style="color:var(--text-muted); font-size:11px;">STATUS</span><br>
+            <span class="badge-status ${sc}">● ${t.status}</span></div>
+          <div><span style="color:var(--text-muted); font-size:11px;">NASABAH</span><br><strong>${t.nasabah_nama}</strong></div>
+          <div><span style="color:var(--text-muted); font-size:11px;">TANGGAL</span><br><strong>${formatDate(t.tanggal)}</strong></div>
+          <div><span style="color:var(--text-muted); font-size:11px;">BERAT</span><br><strong>${t.berat_kg} kg</strong></div>
+          <div><span style="color:var(--text-muted); font-size:11px;">HARGA/KG</span><br><strong>${formatRupiah(t.harga_kg)}</strong></div>
+          <div><span style="color:var(--text-muted); font-size:11px;">POIN DIDAPAT</span><br><strong>⭐ ${t.poin_dapat}</strong></div>
+          ${t.catatan ? `<div><span style="color:var(--text-muted); font-size:11px;">CATATAN</span><br>${t.catatan}</div>` : ''}
+        </div>
+      `;
+      openModal('modalDetailTr');
+    } catch (err) {
+      showToast('Gagal memuat detail', 'danger');
+    }
   }
 
-  function konfirmasiTr(idx) {
-    confirmAction('Konfirmasi transaksi ini sebagai Selesai?', () => {
-      filteredTr[idx].status = 'Selesai';
-      const orig = sampleTransaksi.find(t => t.id === filteredTr[idx].id);
-      if (orig) orig.status = 'Selesai';
-      renderTransaksi(filteredTr);
-      showToast('Transaksi dikonfirmasi!', 'success');
+  // ---- KONFIRMASI PENDING ----
+  async function konfirmasiTr(id) {
+    confirmAction('Konfirmasi transaksi ini sebagai Selesai?', async () => {
+      try {
+        await TransaksiAPI.updateStatus(id, 'Selesai');
+        showToast('Transaksi dikonfirmasi!', 'success');
+        loadTransaksi();
+        loadStats();
+      } catch (err) {
+        showToast('Gagal konfirmasi: ' + err.message, 'danger');
+      }
     });
   }
 
-  function hapusTr(idx) {
-    confirmAction('Hapus transaksi ini?', () => {
-      const id = filteredTr[idx].id;
-      const i = sampleTransaksi.findIndex(t => t.id === id);
-      if (i !== -1) sampleTransaksi.splice(i, 1);
-      filteredTr.splice(idx, 1);
-      renderTransaksi(filteredTr);
-      showToast('Transaksi dihapus', 'warning');
+  // ---- HAPUS ----
+  async function hapusTr(id) {
+    confirmAction('Hapus transaksi ini?', async () => {
+      try {
+        await TransaksiAPI.delete(id);
+        showToast('Transaksi dihapus', 'warning');
+        loadTransaksi();
+        loadStats();
+      } catch (err) {
+        showToast('Gagal menghapus: ' + err.message, 'danger');
+      }
     });
   }
 
   document.addEventListener('DOMContentLoaded', () => {
-    renderTransaksi(sampleTransaksi);
+    loadStats();
+    loadTransaksi();
   });
 </script>
 

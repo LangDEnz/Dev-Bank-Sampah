@@ -60,27 +60,27 @@
           </div>
           <div class="form-group">
             <label class="form-label">Nama Bank Sampah</label>
-            <input type="text" class="form-control" value="Bank Sampah Hijau Lestari">
+            <input type="text" class="form-control" id="profilNama" value="Bank Sampah Hijau Lestari">
           </div>
           <div class="form-group">
             <label class="form-label">Alamat</label>
-            <textarea class="form-control" rows="2">Jl. Lingkungan Hidup No. 1, Kecamatan Sehat, Kota Hijau</textarea>
+            <textarea class="form-control" rows="2" id="profilAlamat">Jl. Lingkungan Hidup No. 1, Kecamatan Sehat, Kota Hijau</textarea>
           </div>
           <div class="grid-2">
             <div class="form-group">
               <label class="form-label">Telepon</label>
-              <input type="tel" class="form-control" value="021-12345678">
+                <input type="tel" class="form-control" id="profilTelepon" value="021-12345678">
             </div>
             <div class="form-group">
               <label class="form-label">Email</label>
-              <input type="email" class="form-control" value="info@bshijaulestari.id">
+                <input type="email" class="form-control" id="profilEmail" value="info@bshijaulestari.id">
             </div>
           </div>
           <div class="form-group">
             <label class="form-label">Nomor Rekening</label>
-            <input type="text" class="form-control" value="1234-5678-9012">
+              <input type="text" class="form-control" id="profilRekening" value="1234-5678-9012">
           </div>
-          <button class="btn btn-primary" onclick="showToast('Profil berhasil disimpan!','success')">💾 Simpan Profil</button>
+            <button class="btn btn-primary" onclick="simpanProfil()">💾 Simpan Profil</button>
         </div>
 
         <div style="display:flex; flex-direction:column; gap:24px;">
@@ -98,13 +98,13 @@
             </div>
             <div class="form-group">
               <label class="form-label">Password Baru</label>
-              <input type="password" class="form-control" placeholder="Biarkan kosong jika tidak ingin mengubah">
+                <input type="password" class="form-control" id="akunPassword" placeholder="Biarkan kosong jika tidak ingin mengubah">
             </div>
             <div class="form-group">
               <label class="form-label">Konfirmasi Password</label>
-              <input type="password" class="form-control" placeholder="Ulangi password baru">
+                <input type="password" class="form-control" id="akunPasswordKonfirmasi" placeholder="Ulangi password baru">
             </div>
-            <button class="btn btn-primary" onclick="showToast('Password berhasil diperbarui!','success')">🔐 Perbarui Password</button>
+            <button class="btn btn-primary" onclick="perbaruiAkun()">🔐 Perbarui Password</button>
           </div>
 
           <!-- NOTIFIKASI -->
@@ -129,28 +129,27 @@
           <!-- MANAJEMEN PENGGUNA -->
           <div class="card">
             <div class="card-title" style="margin-bottom:16px;"><span>🛡️</span> Pengguna Sistem</div>
-            <div style="display:flex; flex-direction:column; gap:10px;">
-              <div style="display:flex; align-items:center; justify-content:space-between; padding:10px; background:#f9f9f9; border-radius:8px;">
-                <div style="display:flex; align-items:center; gap:10px;">
-                  <div style="font-size:20px;">🛡️</div>
-                  <div><div style="font-size:13px; font-weight:600;">Admin Utama</div><div style="font-size:11px; color:var(--text-muted);">admin · Administrator</div></div>
-                </div>
-                <span class="badge-status success">● Aktif</span>
-              </div>
-              <div style="display:flex; align-items:center; justify-content:space-between; padding:10px; background:#f9f9f9; border-radius:8px;">
-                <div style="display:flex; align-items:center; gap:10px;">
-                  <div style="font-size:20px;">👷</div>
-                  <div><div style="font-size:13px; font-weight:600;">Budi Santoso</div><div style="font-size:11px; color:var(--text-muted);">petugas · Petugas</div></div>
-                </div>
-                <span class="badge-status success">● Aktif</span>
-              </div>
-            </div>
-            <button class="btn btn-outline btn-sm" style="margin-top:12px;" onclick="showToast('Fitur manajemen pengguna akan segera tersedia','warning')">＋ Tambah Pengguna</button>
+            <div id="daftarPengguna" style="display:flex; flex-direction:column; gap:10px;"></div>
+            <button class="btn btn-outline btn-sm" style="margin-top:12px;" onclick="openModal('modalTambahPengguna')">＋ Tambah Pengguna</button>
           </div>
 
         </div>
       </div>
     </main>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modalTambahPengguna">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">＋ Tambah Pengguna</div>
+      <button class="modal-close" onclick="closeModal('modalTambahPengguna')">✕</button>
+    </div>
+    <div class="form-group"><label class="form-label">Nama Lengkap</label><input class="form-control" id="userNama" type="text"></div>
+    <div class="form-group"><label class="form-label">Username</label><input class="form-control" id="userUsername" type="text"></div>
+    <div class="form-group"><label class="form-label">Role</label><select class="form-control" id="userRole"><option>Petugas</option><option>Nasabah</option><option>Administrator</option></select></div>
+    <div class="form-group"><label class="form-label">Password</label><input class="form-control" id="userPassword" type="password" minlength="6"></div>
+    <div class="modal-footer"><button class="btn btn-outline" onclick="closeModal('modalTambahPengguna')">Batal</button><button class="btn btn-primary" onclick="tambahPengguna()">Simpan</button></div>
   </div>
 </div>
 
@@ -186,14 +185,97 @@
 .toggle-switch input:checked + .toggle-slider::before { transform: translateX(22px); }
 </style>
 
+<script src="../js/api.js"></script>
 <script src="../js/app.js"></script>
 <script>
+  function simpanProfil() {
+    const profil = {};
+    ['Nama', 'Alamat', 'Telepon', 'Email', 'Rekening'].forEach(field => {
+      profil[field.toLowerCase()] = document.getElementById('profil' + field).value.trim();
+    });
+    localStorage.setItem('bs_profil', JSON.stringify(profil));
+    showToast('Profil berhasil disimpan!', 'success');
+  }
+
+  async function perbaruiAkun() {
+    const nama = document.getElementById('akunNama').value.trim();
+    const password = document.getElementById('akunPassword').value;
+    const konfirmasi = document.getElementById('akunPasswordKonfirmasi').value;
+    if (!nama) return showToast('Nama lengkap wajib diisi!', 'danger');
+    if (password && password !== konfirmasi) return showToast('Konfirmasi password tidak cocok!', 'danger');
+    try {
+      const result = await AuthAPI.updateProfile({ nama, password: password || undefined });
+      updateStoredUser(result.user, result.token);
+      document.getElementById('akunPassword').value = '';
+      document.getElementById('akunPasswordKonfirmasi').value = '';
+      showToast('Akun berhasil diperbarui!', 'success');
+    } catch (err) {
+      showToast('Gagal memperbarui akun: ' + err.message, 'danger');
+    }
+  }
+
+  function ikonRole(role) {
+    return role === 'Administrator' ? '🛡️' : role === 'Petugas' ? '👷' : '👥';
+  }
+
+  async function loadPengguna() {
+    const daftar = document.getElementById('daftarPengguna');
+    const currentUser = AuthAPI.getUser() || {};
+    try {
+      const result = await UsersAPI.getAll();
+      daftar.innerHTML = result.data.map(user => `
+        <div style="display:flex; align-items:center; justify-content:space-between; padding:10px; background:#f9f9f9; border-radius:8px;">
+          <div style="display:flex; align-items:center; gap:10px;"><div style="font-size:20px;">${ikonRole(user.role)}</div>
+            <div><div style="font-size:13px; font-weight:600;">${user.nama}</div><div style="font-size:11px; color:var(--text-muted);">${user.username} · ${user.role}</div></div>
+          </div><div style="display:flex; align-items:center; gap:8px;"><span class="badge-status ${user.aktif ? 'success' : 'danger'}">● ${user.aktif ? 'Aktif' : 'Nonaktif'}</span>${user.id !== currentUser.id ? `<button class="btn-icon" title="Hapus pengguna" onclick="hapusPengguna(${user.id})">🗑️</button>` : ''}</div>
+        </div>`).join('');
+    } catch (err) {
+      daftar.innerHTML = '<div style="color:var(--danger); font-size:13px;">Gagal memuat pengguna.</div>';
+    }
+  }
+
+  async function hapusPengguna(id) {
+    if (!confirm('Hapus pengguna ini?')) return;
+      try {
+        await UsersAPI.delete(id);
+        await loadPengguna();
+        showToast('Pengguna berhasil dihapus', 'warning');
+      } catch (err) {
+        showToast('Gagal menghapus pengguna: ' + err.message, 'danger');
+      }
+  }
+
+  async function tambahPengguna() {
+    const data = {
+      nama: document.getElementById('userNama').value.trim(),
+      username: document.getElementById('userUsername').value.trim(),
+      role: document.getElementById('userRole').value,
+      password: document.getElementById('userPassword').value
+    };
+    if (!data.nama || !data.username || !data.password) return showToast('Semua field wajib diisi!', 'danger');
+    try {
+      await UsersAPI.create(data);
+      closeModal('modalTambahPengguna');
+      ['userNama', 'userUsername', 'userPassword'].forEach(id => document.getElementById(id).value = '');
+      await loadPengguna();
+      showToast('Pengguna berhasil ditambahkan!', 'success');
+    } catch (err) {
+      showToast('Gagal menambah pengguna: ' + err.message, 'danger');
+    }
+  }
+
   document.addEventListener('DOMContentLoaded', () => {
-    const user = JSON.parse(sessionStorage.getItem('bs_user') || '{}');
+    const user = AuthAPI.getUser() || {};
     const nama = document.getElementById('akunNama');
     const role = document.getElementById('akunRole');
-    if (nama) nama.value = user.name || '';
+    const profil = JSON.parse(localStorage.getItem('bs_profil') || '{}');
+    Object.entries(profil).forEach(([field, value]) => {
+      const input = document.getElementById('profil' + field[0].toUpperCase() + field.slice(1));
+      if (input) input.value = value;
+    });
+    if (nama) nama.value = user.nama || user.name || '';
     if (role) role.value = user.role || '';
+    loadPengguna();
   });
 </script>
 </body>

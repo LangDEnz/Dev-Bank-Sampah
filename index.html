@@ -147,12 +147,6 @@
 </div>
 
 <script>
-  const USERS = {
-    admin:    { password: 'admin123',    name: 'Admin Utama',   role: 'Administrator' },
-    petugas:  { password: 'petugas123',  name: 'Budi Santoso',  role: 'Petugas'       },
-    nasabah:  { password: 'nasabah123',  name: 'Siti Rahayu',   role: 'Nasabah'       },
-  };
-
   function togglePassword() {
     const input = document.getElementById('password');
     const btn   = document.getElementById('eyeBtn');
@@ -171,7 +165,7 @@
     document.getElementById('loginForm').dispatchEvent(new Event('submit'));
   }
 
-  document.getElementById('loginForm').addEventListener('submit', function(e) {
+  document.getElementById('loginForm').addEventListener('submit', async function(e) {
     e.preventDefault();
     const username = document.getElementById('username').value.trim();
     const password = document.getElementById('password').value;
@@ -182,20 +176,40 @@
     errBox.classList.remove('show');
     btn.classList.add('loading');
 
-    setTimeout(() => {
-      btn.classList.remove('loading');
-      const user = USERS[username];
+    try {
+      const res = await fetch('http://localhost:3000/api/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password })
+      });
 
-      if (user && user.password === password) {
-        sessionStorage.setItem('bs_user', JSON.stringify({ username, ...user }));
+      const data = await res.json();
+      btn.classList.remove('loading');
+
+      if (res.ok) {
+        // Simpan token & user ke localStorage
+        localStorage.setItem('bs_token', data.token);
+        localStorage.setItem('bs_user', JSON.stringify(data.user));
+
+        // Remember me
+        if (document.getElementById('rememberMe').checked) {
+          localStorage.setItem('bs_remember', JSON.stringify({ username }));
+        } else {
+          localStorage.removeItem('bs_remember');
+        }
+
         window.location.href = 'pages/dashboard.html';
       } else {
-        errText.textContent = 'Username atau password salah. Silakan coba lagi.';
+        errText.textContent = data.error || 'Username atau password salah.';
         errBox.classList.add('show');
         document.getElementById('password').value = '';
         document.getElementById('password').focus();
       }
-    }, 1200);
+    } catch (err) {
+      btn.classList.remove('loading');
+      errText.textContent = 'Tidak dapat terhubung ke server. Pastikan server berjalan.';
+      errBox.classList.add('show');
+    }
   });
 
   // Auto-fill if remembered
@@ -205,6 +219,10 @@
       const { username } = JSON.parse(saved);
       document.getElementById('username').value = username;
       document.getElementById('rememberMe').checked = true;
+    }
+    // Jika sudah login, redirect langsung
+    if (localStorage.getItem('bs_token')) {
+      window.location.href = 'pages/dashboard.html';
     }
   });
 </script>

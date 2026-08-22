@@ -4,8 +4,9 @@
 
 // ---- AUTH CHECK ----
 function checkAuth() {
-  const user = sessionStorage.getItem('bs_user');
-  if (!user) {
+  const token = localStorage.getItem('bs_token');
+  const user  = localStorage.getItem('bs_user');
+  if (!token || !user) {
     window.location.href = '../index.html';
     return null;
   }
@@ -13,7 +14,8 @@ function checkAuth() {
 }
 
 function logout() {
-  sessionStorage.removeItem('bs_user');
+  localStorage.removeItem('bs_token');
+  localStorage.removeItem('bs_user');
   window.location.href = '../index.html';
 }
 
@@ -34,8 +36,13 @@ function setUserInfo(user) {
   const nameEl  = document.getElementById('sidebarUserName');
   const roleEl  = document.getElementById('sidebarUserRole');
   const topEl   = document.getElementById('topbarPageTitle');
-  if (nameEl) nameEl.textContent = user.name;
+  if (nameEl) nameEl.textContent = user.nama || user.name || '';
   if (roleEl) roleEl.textContent = user.role;
+}
+
+function updateStoredUser(user, token) {
+  localStorage.setItem('bs_user', JSON.stringify(user));
+  if (token) localStorage.setItem('bs_token', token);
 }
 
 // ---- TOAST NOTIFICATION ----

@@ -222,117 +222,138 @@
   </div>
 </div>
 
+<script src="../js/api.js"></script>
 <script src="../js/app.js"></script>
 <script>
-  let editingIdx = null;
-  let filteredNasabah = [...sampleNasabah];
+  let editingId  = null;   // ID database dari nasabah yang sedang diedit
+  let allNasabah = [];     // cache data dari API
+
+  // ---- LOAD DATA DARI DATABASE ----
+  async function loadNasabah() {
+    const q      = document.getElementById('searchNasabah').value.toLowerCase();
+    const status = document.getElementById('filterStatusNasabah').value;
+    try {
+      const params = {};
+      if (q)      params.q      = q;
+      if (status) params.status = status;
+      const res = await NasabahAPI.getAll(params);
+      allNasabah = res.data || [];
+      renderNasabah(allNasabah);
+    } catch (err) {
+      showToast('Gagal memuat data nasabah: ' + err.message, 'danger');
+    }
+  }
 
   function renderNasabah(data) {
     const tbody = document.getElementById('nasabahTable');
     tbody.innerHTML = '';
     if (data.length === 0) {
       tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; padding:40px; color:var(--text-muted);">Tidak ada nasabah ditemukan</td></tr>`;
+      document.getElementById('paginasiNasabah').textContent = '0 nasabah';
       return;
     }
-    data.forEach((n, idx) => {
+    data.forEach((n) => {
       const tr = document.createElement('tr');
       tr.innerHTML = `
-        <td><strong>${n.id}</strong></td>
+        <td><strong>${n.kode}</strong></td>
         <td>
           <div style="display:flex; align-items:center; gap:10px;">
             <div style="width:36px; height:36px; background:#e8f5e9; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:16px;">👤</div>
             <strong>${n.nama}</strong>
           </div>
         </td>
-        <td>${n.telepon}</td>
-        <td style="max-width:180px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${n.alamat}</td>
+        <td>${n.telepon || '—'}</td>
+        <td style="max-width:180px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${n.alamat || '—'}</td>
         <td><strong style="color:var(--primary);">${formatRupiah(n.saldo)}</strong></td>
+        <td><span style="background:#fff8e1;color:#e65100;padding:3px 10px;border-radius:20px;font-size:12px;font-weight:600;">⭐ ${n.poin}</span></td>
+        <td><span class="badge-status ${n.status === 'Aktif' ? 'success' : 'danger'}">● ${n.status}</span></td>
         <td>
-          <span style="background:#fff8e1; color:#e65100; padding:3px 10px; border-radius:20px; font-size:12px; font-weight:600;">⭐ ${n.poin}</span>
-        </td>
-        <td>
-          <span class="badge-status ${n.status === 'Aktif' ? 'success' : 'danger'}">● ${n.status}</span>
-        </td>
-        <td>
-          <button class="btn-icon" title="Detail" onclick="detailNasabah(${idx})">👁️</button>
-          <button class="btn-icon" title="Edit" style="margin:0 4px;" onclick="editNasabah(${idx})">✏️</button>
-          <button class="btn-icon" title="Hapus" onclick="hapusNasabah(${idx})">🗑️</button>
+          <button class="btn-icon" title="Detail" onclick="detailNasabah(${n.id})">👁️</button>
+          <button class="btn-icon" title="Edit" style="margin:0 4px;" onclick="editNasabah(${n.id})">✏️</button>
+          <button class="btn-icon" title="Hapus" onclick="hapusNasabah(${n.id},'${n.nama}')">🗑️</button>
         </td>
       `;
       tbody.appendChild(tr);
     });
-    document.getElementById('paginasiNasabah').textContent = `Menampilkan ${data.length} dari ${sampleNasabah.length} nasabah`;
+    document.getElementById('paginasiNasabah').textContent =
+      `Menampilkan ${data.length} nasabah`;
   }
 
   function applyFilterNasabah() {
-    const q      = document.getElementById('searchNasabah').value.toLowerCase();
-    const status = document.getElementById('filterStatusNasabah').value;
-    filteredNasabah = sampleNasabah.filter(n =>
-      (n.nama.toLowerCase().includes(q) || n.id.toLowerCase().includes(q) || n.telepon.includes(q)) &&
-      (!status || n.status === status)
-    );
-    renderNasabah(filteredNasabah);
+    loadNasabah();
   }
 
-  function simpanNasabah() {
-    const nama     = document.getElementById('inputNama').value.trim();
-    const telepon  = document.getElementById('inputTelepon').value.trim();
-    const alamat   = document.getElementById('inputAlamat').value.trim();
-    const saldo    = parseInt(document.getElementById('inputSaldo').value) || 0;
-    const poin     = parseInt(document.getElementById('inputPoin').value) || 0;
-    const status   = document.getElementById('inputStatus').value;
+  // ---- SIMPAN (CREATE / UPDATE) KE DATABASE ----
+  async function simpanNasabah() {
+    const nama    = document.getElementById('inputNama').value.trim();
+    const telepon = document.getElementById('inputTelepon').value.trim();
+    const alamat  = document.getElementById('inputAlamat').value.trim();
+    const saldo   = parseFloat(document.getElementById('inputSaldo').value) || 0;
+    const poin    = parseInt(document.getElementById('inputPoin').value)  || 0;
+    const status  = document.getElementById('inputStatus').value;
 
     if (!nama || !telepon) {
       showToast('Nama dan telepon wajib diisi!', 'danger');
       return;
     }
 
-    if (editingIdx !== null) {
-      sampleNasabah[editingIdx] = { ...sampleNasabah[editingIdx], nama, telepon, alamat, saldo, poin, status };
-      showToast('Data nasabah berhasil diperbarui!', 'success');
-      editingIdx = null;
-    } else {
-      const newId = 'NS' + String(sampleNasabah.length + 1).padStart(3, '0');
-      sampleNasabah.unshift({ id: newId, nama, telepon, alamat, saldo, poin, status });
-      showToast('Nasabah baru berhasil ditambahkan!', 'success');
+    try {
+      if (editingId !== null) {
+        await NasabahAPI.update(editingId, { nama, telepon, alamat, saldo, poin, status });
+        showToast('Data nasabah berhasil diperbarui!', 'success');
+      } else {
+        await NasabahAPI.create({ nama, telepon, alamat, saldo, poin, status });
+        showToast('Nasabah baru berhasil ditambahkan!', 'success');
+      }
+      closeModal('modalNasabah');
+      resetForm();
+      loadNasabah();   // refresh dari database
+    } catch (err) {
+      showToast('Gagal menyimpan: ' + err.message, 'danger');
     }
-
-    closeModal('modalNasabah');
-    filteredNasabah = [...sampleNasabah];
-    renderNasabah(filteredNasabah);
-    resetForm();
   }
 
-  function editNasabah(idx) {
-    editingIdx = idx;
-    const n = filteredNasabah[idx];
+  // ---- EDIT — ambil data dari cache ----
+  function editNasabah(id) {
+    const n = allNasabah.find(x => x.id === id);
+    if (!n) return;
+    editingId = id;
     document.getElementById('modalNasabahTitle').textContent = '✏️ Edit Nasabah';
-    document.getElementById('inputId').value      = n.id;
+    document.getElementById('inputId').value      = n.kode;
     document.getElementById('inputNama').value    = n.nama;
-    document.getElementById('inputTelepon').value = n.telepon;
-    document.getElementById('inputAlamat').value  = n.alamat;
+    document.getElementById('inputTelepon').value = n.telepon || '';
+    document.getElementById('inputAlamat').value  = n.alamat  || '';
     document.getElementById('inputSaldo').value   = n.saldo;
     document.getElementById('inputPoin').value    = n.poin;
     document.getElementById('inputStatus').value  = n.status;
     openModal('modalNasabah');
   }
 
-  function hapusNasabah(idx) {
-    confirmAction(`Hapus nasabah "${filteredNasabah[idx].nama}"? Tindakan ini tidak dapat dibatalkan.`, () => {
-      const id = filteredNasabah[idx].id;
-      const i  = sampleNasabah.findIndex(n => n.id === id);
-      if (i !== -1) sampleNasabah.splice(i, 1);
-      filteredNasabah.splice(idx, 1);
-      renderNasabah(filteredNasabah);
-      showToast('Nasabah berhasil dihapus', 'warning');
+  // ---- HAPUS DARI DATABASE ----
+  async function hapusNasabah(id, nama) {
+    confirmAction(`Hapus nasabah "${nama}"? Tindakan ini tidak dapat dibatalkan.`, async () => {
+      try {
+        await NasabahAPI.delete(id);
+        showToast('Nasabah berhasil dihapus', 'warning');
+        loadNasabah();
+      } catch (err) {
+        showToast('Gagal menghapus: ' + err.message, 'danger');
+      }
     });
   }
 
-  function detailNasabah(idx) {
-    const n = filteredNasabah[idx];
-    const trCount = sampleTransaksi.filter(t => t.nasabah === n.nama).length;
-    const trTotal = sampleTransaksi.filter(t => t.nasabah === n.nama && t.status === 'Selesai')
-                      .reduce((sum, t) => sum + t.total, 0);
+  // ---- DETAIL NASABAH ----
+  async function detailNasabah(id) {
+    const n = allNasabah.find(x => x.id === id);
+    if (!n) return;
+    // Ambil transaksi nasabah dari API
+    let trCount = 0, trTotal = 0;
+    try {
+      const trRes = await TransaksiAPI.getAll({ q: n.nama });
+      trCount = trRes.data.length;
+      trTotal = trRes.data.filter(t => t.status === 'Selesai').reduce((s, t) => s + t.total, 0);
+    } catch (_) {}
+
     document.getElementById('detailNasabahContent').innerHTML = `
       <div style="text-align:center; margin-bottom:20px;">
         <div style="width:70px; height:70px; background:#e8f5e9; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:36px; margin:0 auto 12px;">👤</div>
@@ -340,11 +361,11 @@
         <span class="badge-status ${n.status === 'Aktif' ? 'success' : 'danger'}" style="margin-top:6px;">● ${n.status}</span>
       </div>
       <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px 20px; background:#f9f9f9; padding:16px; border-radius:10px; font-size:13.5px;">
-        <div><span style="color:var(--text-muted); font-size:11px;">ID NASABAH</span><br><strong>${n.id}</strong></div>
-        <div><span style="color:var(--text-muted); font-size:11px;">TELEPON</span><br><strong>${n.telepon}</strong></div>
+        <div><span style="color:var(--text-muted); font-size:11px;">ID NASABAH</span><br><strong>${n.kode}</strong></div>
+        <div><span style="color:var(--text-muted); font-size:11px;">TELEPON</span><br><strong>${n.telepon || '—'}</strong></div>
         <div><span style="color:var(--text-muted); font-size:11px;">SALDO TABUNGAN</span><br><strong style="color:var(--primary); font-size:16px;">${formatRupiah(n.saldo)}</strong></div>
         <div><span style="color:var(--text-muted); font-size:11px;">POIN</span><br><strong>⭐ ${n.poin} poin</strong></div>
-        <div style="grid-column:span 2;"><span style="color:var(--text-muted); font-size:11px;">ALAMAT</span><br><strong>${n.alamat}</strong></div>
+        <div style="grid-column:span 2;"><span style="color:var(--text-muted); font-size:11px;">ALAMAT</span><br><strong>${n.alamat || '—'}</strong></div>
         <div><span style="color:var(--text-muted); font-size:11px;">TOTAL TRANSAKSI</span><br><strong>${trCount} kali</strong></div>
         <div><span style="color:var(--text-muted); font-size:11px;">TOTAL SETORAN</span><br><strong style="color:var(--primary);">${formatRupiah(trTotal)}</strong></div>
       </div>
@@ -361,11 +382,14 @@
     document.getElementById('inputPoin').value    = '0';
     document.getElementById('inputStatus').value  = 'Aktif';
     document.getElementById('modalNasabahTitle').textContent = '👤 Tambah Nasabah Baru';
-    editingIdx = null;
+    editingId = null;
   }
 
   document.addEventListener('DOMContentLoaded', () => {
-    renderNasabah(sampleNasabah);
+    loadNasabah();
+    // search realtime
+    document.getElementById('searchNasabah').addEventListener('input', () => loadNasabah());
+    document.getElementById('filterStatusNasabah').addEventListener('change', () => loadNasabah());
   });
 </script>
 

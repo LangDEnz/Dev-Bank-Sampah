@@ -152,54 +152,118 @@
   </div>
 </div>
 
+<script src="../js/api.js"></script>
 <script src="../js/app.js"></script>
 <script>
-  document.addEventListener('DOMContentLoaded', () => {
-    const sel = document.getElementById('pilihNasabahTarik');
-    sampleNasabah.forEach(n => {
-      if (n.saldo > 0) {
-        const opt = document.createElement('option');
-        opt.value = n.id;
-        opt.textContent = `${n.id} — ${n.nama} (${formatRupiah(n.saldo)})`;
-        sel.appendChild(opt);
-      }
-    });
-  });
+  let nasabahCache = {};   // id → {nama, saldo}
 
-  function updateSaldoInfo() {
-    const id = document.getElementById('pilihNasabahTarik').value;
-    const info = document.getElementById('infoPenarikan');
-    if (!id) { info.style.display = 'none'; return; }
-    const n = sampleNasabah.find(x => x.id === id);
-    if (n) {
-      info.style.display = 'block';
-      document.getElementById('saldoTersedia').textContent = formatRupiah(n.saldo);
+  // ---- LOAD NASABAH KE SELECT & RIWAYAT ----
+  async function initPage() {
+    try {
+      const res = await NasabahAPI.getAll({ status: 'Aktif' });
+      const sel = document.getElementById('pilihNasabahTarik');
+      res.data.forEach(n => {
+        nasabahCache[n.id] = n;
+        if (n.saldo > 0) {
+          const opt = document.createElement('option');
+          opt.value       = n.id;
+          opt.textContent = `${n.kode} — ${n.nama} (${formatRupiah(n.saldo)})`;
+          sel.appendChild(opt);
+        }
+      });
+    } catch (err) {
+      showToast('Gagal memuat nasabah: ' + err.message, 'danger');
     }
+
+    loadRiwayat();
   }
 
-  function cekSaldo() {
+  // ---- UPDATE INFO SALDO ----
+  async function updateSaldoInfo() {
+    const id   = document.getElementById('pilihNasabahTarik').value;
+    const info = document.getElementById('infoPenarikan');
+    if (!id) { info.style.display = 'none'; return; }
+    try {
+      const res = await NasabahAPI.getById(id);
+      const n   = res.data;
+      nasabahCache[id] = n;
+      info.style.display = 'block';
+      document.getElementById('saldoTersedia').textContent = formatRupiah(n.saldo);
+    } catch (_) { info.style.display = 'none'; }
+  }
+
+  // ---- CEK SALDO REAL-TIME ----
+  async function cekSaldo() {
     const id     = document.getElementById('pilihNasabahTarik').value;
     const jumlah = parseInt(document.getElementById('jumlahTarik').value) || 0;
     const warn   = document.getElementById('warningTarik');
     if (!id) { warn.style.display = 'none'; return; }
-    const n = sampleNasabah.find(x => x.id === id);
+    const n = nasabahCache[id];
     warn.style.display = (n && jumlah > n.saldo) ? 'block' : 'none';
   }
 
-  function prosesPenarikan() {
-    const id     = document.getElementById('pilihNasabahTarik').value;
-    const jumlah = parseInt(document.getElementById('jumlahTarik').value) || 0;
-    const metode = document.getElementById('metodeTarik').value;
-    if (!id) { showToast('Pilih nasabah terlebih dahulu!', 'danger'); return; }
-    if (!jumlah || jumlah < 1000) { showToast('Jumlah penarikan minimal Rp 1.000!', 'danger'); return; }
-    const n = sampleNasabah.find(x => x.id === id);
-    if (jumlah > n.saldo) { showToast('Saldo tidak mencukupi!', 'danger'); return; }
-    n.saldo -= jumlah;
-    showToast(`Penarikan ${formatRupiah(jumlah)} untuk ${n.nama} berhasil!`, 'success');
-    document.getElementById('pilihNasabahTarik').value = '';
-    document.getElementById('jumlahTarik').value = '';
-    document.getElementById('infoPenarikan').style.display = 'none';
+  // ---- PROSES PENARIKAN KE DATABASE ----
+  async function prosesPenarikan() {
+    const nasabah_id = parseInt(document.getElementById('pilihNasabahTarik').value);
+    const jumlah     = parseInt(document.getElementById('jumlahTarik').value) || 0;
+    const metode     = document.getElementById('metodeTarik').value;
+    const catatan    = document.getElementById('catatanTarik').value;
+    const tanggal    = new Date().toISOString().split('T')[0];
+
+    if (!nasabah_id) { showToast('Pilih nasabah terlebih dahulu!', 'danger'); return; }
+    if (!jumlah || jumlah < 1000) { showToast('Jumlah minimal Rp 1.000!', 'danger'); return; }
+
+    try {
+      const res = await PenarikanAPI.create({ nasabah_id, jumlah, metode, catatan, tanggal });
+      const n   = nasabahCache[nasabah_id];
+      showToast(`Penarikan ${formatRupiah(jumlah)} untuk ${n?.nama||''} berhasil! Kode: ${res.kode}`, 'success');
+
+      // Reset form
+      document.getElementById('pilihNasabahTarik').value = '';
+      document.getElementById('jumlahTarik').value       = '';
+      document.getElementById('catatanTarik').value      = '';
+      document.getElementById('infoPenarikan').style.display  = 'none';
+      document.getElementById('warningTarik').style.display   = 'none';
+
+      // Reload select (saldo berubah) dan riwayat
+      document.getElementById('pilihNasabahTarik').innerHTML = '<option value="">— Pilih Nasabah —</option>';
+      nasabahCache = {};
+      await initPage();
+    } catch (err) {
+      showToast('Gagal: ' + err.message, 'danger');
+    }
   }
+
+  // ---- LOAD RIWAYAT PENARIKAN ----
+  async function loadRiwayat() {
+    try {
+      const res  = await PenarikanAPI.getAll();
+      const list = res.data || [];
+      const cont = document.getElementById('riwayatPenarikan');
+      const scMap = { Selesai:'success', Pending:'warning', Dibatalkan:'danger' };
+
+      if (list.length === 0) {
+        cont.innerHTML = `<p style="text-align:center;color:var(--text-muted);padding:20px;">Belum ada penarikan</p>`;
+        return;
+      }
+      cont.innerHTML = list.slice(0,10).map(p => `
+        <div style="border-bottom:1px solid var(--border); padding:12px 0;">
+          <div style="display:flex; justify-content:space-between; font-size:13.5px;">
+            <div>
+              <strong>${p.nasabah_nama}</strong>
+              <div style="font-size:12px; color:var(--text-muted);">${p.metode} · ${formatDate(p.tanggal)}</div>
+            </div>
+            <div style="text-align:right;">
+              <strong style="color:var(--danger);">-${formatRupiah(p.jumlah)}</strong>
+              <div><span class="badge-status ${scMap[p.status]||'info'}" style="font-size:10px;">● ${p.status}</span></div>
+            </div>
+          </div>
+        </div>
+      `).join('');
+    } catch (_) {}
+  }
+
+  document.addEventListener('DOMContentLoaded', initPage);
 </script>
 </body>
 </html>

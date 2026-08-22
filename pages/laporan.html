@@ -45,7 +45,7 @@
       <div class="topbar-left"><h1>Laporan</h1><p id="topbarDate">Memuat tanggal...</p></div>
       <div class="topbar-right">
         <button class="topbar-btn">🔔<span class="badge">3</span></button>
-        <button class="btn btn-primary" onclick="showToast('Laporan sedang dicetak...','success')">🖨️ Cetak Laporan</button>
+        <button class="btn btn-primary" onclick="window.print()">🖨️ Cetak Laporan</button>
       </div>
     </header>
 
@@ -207,6 +207,7 @@
   </div>
 </div>
 
+<script src="../js/api.js"></script>
 <script src="../js/app.js"></script>
 <script>
   // Weekly chart

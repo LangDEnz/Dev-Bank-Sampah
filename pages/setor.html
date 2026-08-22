@@ -250,136 +250,145 @@
   </div>
 </div>
 
+<script src="../js/api.js"></script>
 <script src="../js/app.js"></script>
 <script>
   const icons = { Plastik:'🧴', Kertas:'📰', Logam:'🔩', Organik:'🌿', Elektronik:'📱', Kaca:'🍶' };
   const statusClass = { Selesai:'success', Pending:'warning', Dibatalkan:'danger' };
-  let filteredData = [...sampleTransaksi];
 
-  // Set today's date
-  document.addEventListener('DOMContentLoaded', () => {
-    const today = new Date().toISOString().split('T')[0];
-    document.getElementById('tglSetor').value = today;
+  let allTransaksi = [];   // cache dari API
+  let allJenis     = [];   // cache jenis sampah dari API
+  let currentDetail = null;
 
-    // Populate nasabah select
-    const sel = document.getElementById('pilihNasabah');
-    sampleNasabah.forEach(n => {
-      const opt = document.createElement('option');
-      opt.value = n.id;
-      opt.textContent = `${n.id} — ${n.nama}`;
-      sel.appendChild(opt);
-    });
+  // ---- LOAD TRANSAKSI DARI DATABASE ----
+  async function loadTransaksi() {
+    const q      = document.getElementById('searchSetor').value;
+    const jenis  = document.getElementById('filterJenis').value;
+    const status = document.getElementById('filterStatus').value;
+    const params = {};
+    if (q)      params.q      = q;
+    if (jenis)  params.jenis  = jenis;
+    if (status) params.status = status;
 
-    renderTable(sampleTransaksi);
-  });
+    try {
+      const res    = await TransaksiAPI.getAll(params);
+      allTransaksi = res.data || [];
+      renderTable(allTransaksi);
+      updateStatMini();
+    } catch (err) {
+      showToast('Gagal memuat data: ' + err.message, 'danger');
+    }
+  }
+
+  // ---- UPDATE STAT MINI DI ATAS TABEL ----
+  async function updateStatMini() {
+    try {
+      const res = await DashboardAPI.getStats();
+      const d   = res.data;
+      // update 3 card stat jika ada
+      const cards = document.querySelectorAll('.stat-info h3');
+      if (cards[0]) cards[0].textContent = d.transaksi_hari_ini + ' setoran';
+    } catch (_) {}
+  }
 
   function renderTable(data) {
     const tbody = document.getElementById('setorTable');
     tbody.innerHTML = '';
     if (data.length === 0) {
       tbody.innerHTML = `<tr><td colspan="9" style="text-align:center; padding:40px; color:var(--text-muted);">Tidak ada data ditemukan</td></tr>`;
+      document.getElementById('paginasiInfo').textContent = '0 data';
       return;
     }
-    data.forEach((t, idx) => {
+    data.forEach((t) => {
+      const jenisNama = t.jenis_nama || '—';
+      const jenisKey  = jenisNama.toLowerCase();
       const tr = document.createElement('tr');
       tr.innerHTML = `
-        <td><strong>${t.id}</strong></td>
-        <td>${t.nasabah}</td>
-        <td><span class="trash-tag ${t.jenis.toLowerCase()}">${icons[t.jenis]||'♻️'} ${t.jenis}</span></td>
-        <td>${t.berat} kg</td>
-        <td>Rp ${Number(t.harga).toLocaleString('id-ID')}</td>
+        <td><strong>${t.kode}</strong></td>
+        <td>${t.nasabah_nama}</td>
+        <td><span class="trash-tag ${jenisKey}">${t.jenis_ikon||'♻️'} ${jenisNama}</span></td>
+        <td>${t.berat_kg} kg</td>
+        <td>${formatRupiah(t.harga_kg)}</td>
         <td><strong style="color:var(--primary);">${formatRupiah(t.total)}</strong></td>
         <td>${formatDate(t.tanggal)}</td>
-        <td><span class="badge-status ${statusClass[t.status]}">● ${t.status}</span></td>
+        <td><span class="badge-status ${statusClass[t.status]||'info'}">● ${t.status}</span></td>
         <td>
-          <button class="btn-icon" title="Detail" onclick="showDetail(${idx})">👁️</button>
-          <button class="btn-icon" title="Edit" style="margin:0 4px;" onclick="showToast('Fitur edit akan segera tersedia','warning')">✏️</button>
-          <button class="btn-icon" title="Hapus" onclick="hapusTransaksi(${idx})">🗑️</button>
+          <button class="btn-icon" title="Detail" onclick="showDetail(${t.id})">👁️</button>
+          <button class="btn-icon" title="Hapus" style="margin-left:4px;" onclick="hapusTransaksi(${t.id})">🗑️</button>
         </td>
       `;
       tbody.appendChild(tr);
     });
-    document.getElementById('paginasiInfo').textContent = `Menampilkan 1-${data.length} dari ${data.length} data`;
+    document.getElementById('paginasiInfo').textContent =
+      `Menampilkan ${data.length} data`;
   }
 
-  // Search & Filter
-  function applyFilter() {
-    const q       = document.getElementById('searchSetor').value.toLowerCase();
-    const jenis   = document.getElementById('filterJenis').value;
-    const status  = document.getElementById('filterStatus').value;
-    filteredData = sampleTransaksi.filter(t =>
-      (t.nasabah.toLowerCase().includes(q) || t.id.toLowerCase().includes(q)) &&
-      (!jenis  || t.jenis  === jenis) &&
-      (!status || t.status === status)
-    );
-    renderTable(filteredData);
-  }
+  // ---- FILTER ----
+  function applyFilter() { loadTransaksi(); }
+  document.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('searchSetor').addEventListener('input',  applyFilter);
+    document.getElementById('filterJenis').addEventListener('change', applyFilter);
+    document.getElementById('filterStatus').addEventListener('change',applyFilter);
+  });
 
-  document.getElementById('searchSetor').addEventListener('input', applyFilter);
-  document.getElementById('filterJenis').addEventListener('change', applyFilter);
-  document.getElementById('filterStatus').addEventListener('change', applyFilter);
-
-  // Hitung total
+  // ---- HITUNG TOTAL (pakai harga dari DB) ----
   function hitungTotal() {
-    const jenis = document.getElementById('jenisSetor').value;
-    const berat = parseFloat(document.getElementById('beratSetor').value) || 0;
+    const jenisId = document.getElementById('jenisSetor').value;
+    const berat   = parseFloat(document.getElementById('beratSetor').value) || 0;
     const preview = document.getElementById('previewHarga');
-    if (jenis && berat > 0) {
-      const harga = hargaSampah[jenis] || 0;
-      const total = harga * berat;
-      preview.style.display = 'block';
-      document.getElementById('prevHargaKg').textContent  = formatRupiah(harga);
-      document.getElementById('prevBerat').textContent    = berat + ' kg';
-      document.getElementById('prevTotal').textContent   = formatRupiah(total);
-    } else {
-      preview.style.display = 'none';
-    }
+    if (!jenisId || berat <= 0) { preview.style.display = 'none'; return; }
+
+    const jenis = allJenis.find(j => j.id == jenisId);
+    if (!jenis) return;
+    const harga = jenis.harga_kg;
+    const total = harga * berat;
+
+    preview.style.display = 'block';
+    document.getElementById('prevHargaKg').textContent = formatRupiah(harga);
+    document.getElementById('prevBerat').textContent   = berat + ' kg';
+    document.getElementById('prevTotal').textContent   = formatRupiah(total);
   }
 
-  // Update info nasabah
+  // ---- INFO NASABAH SAAT DIPILIH ----
   function updateNasabahInfo() {
-    const id = document.getElementById('pilihNasabah').value;
-    const infoBox = document.getElementById('infoNasabah');
-    if (!id) { infoBox.style.display = 'none'; return; }
-    const n = sampleNasabah.find(x => x.id === id);
-    if (n) {
+    const nasabahId = document.getElementById('pilihNasabah').value;
+    const infoBox   = document.getElementById('infoNasabah');
+    if (!nasabahId) { infoBox.style.display = 'none'; return; }
+
+    NasabahAPI.getById(nasabahId).then(res => {
+      const n = res.data;
       infoBox.style.display = 'block';
       document.getElementById('infNama').textContent  = n.nama;
       document.getElementById('infSaldo').textContent = formatRupiah(n.saldo);
       document.getElementById('infPoin').textContent  = n.poin + ' poin';
-    }
+    }).catch(() => { infoBox.style.display = 'none'; });
   }
 
-  // Submit setoran
-  function submitSetor() {
-    const nasabahId = document.getElementById('pilihNasabah').value;
-    const jenis     = document.getElementById('jenisSetor').value;
-    const berat     = parseFloat(document.getElementById('beratSetor').value);
-    const tgl       = document.getElementById('tglSetor').value;
+  // ---- SUBMIT SETORAN KE DATABASE ----
+  async function submitSetor() {
+    const nasabah_id = parseInt(document.getElementById('pilihNasabah').value);
+    const jenis_id   = parseInt(document.getElementById('jenisSetor').value);
+    const berat_kg   = parseFloat(document.getElementById('beratSetor').value);
+    const tanggal    = document.getElementById('tglSetor').value;
+    const catatan    = document.getElementById('catatanSetor').value;
 
-    if (!nasabahId || !jenis || !berat || !tgl) {
+    if (!nasabah_id || !jenis_id || !berat_kg || !tanggal) {
       showToast('Harap lengkapi semua field!', 'danger');
       return;
     }
 
-    const nasabah = sampleNasabah.find(n => n.id === nasabahId);
-    const harga   = hargaSampah[jenis];
-    const total   = harga * berat;
-    const newTr   = {
-      id: 'TR' + String(sampleTransaksi.length + 1).padStart(3, '0'),
-      nasabah: nasabah.nama,
-      jenis, berat,
-      harga, total,
-      tanggal: tgl,
-      status: 'Selesai'
-    };
+    try {
+      const res = await TransaksiAPI.create({ nasabah_id, jenis_id, berat_kg, tanggal, catatan });
+      closeModal('modalSetor');
+      showToast(`Setoran ${res.kode} berhasil disimpan! Total: ${formatRupiah(res.total)}`, 'success');
+      resetFormSetor();
+      loadTransaksi();
+    } catch (err) {
+      showToast('Gagal menyimpan setoran: ' + err.message, 'danger');
+    }
+  }
 
-    sampleTransaksi.unshift(newTr);
-    closeModal('modalSetor');
-    renderTable(sampleTransaksi);
-    showToast(`Setoran ${newTr.id} berhasil disimpan!`, 'success');
-
-    // Reset form
+  function resetFormSetor() {
     document.getElementById('pilihNasabah').value = '';
     document.getElementById('jenisSetor').value   = '';
     document.getElementById('beratSetor').value   = '';
@@ -388,36 +397,84 @@
     document.getElementById('infoNasabah').style.display  = 'none';
   }
 
-  // Show detail
-  function showDetail(idx) {
-    const t = filteredData[idx];
-    const content = document.getElementById('detailContent');
-    content.innerHTML = `
-      <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px 20px; background:#f9f9f9; padding:16px; border-radius:10px;">
-        <div><span style="color:var(--text-muted); font-size:12px;">ID Transaksi</span><br><strong>${t.id}</strong></div>
-        <div><span style="color:var(--text-muted); font-size:12px;">Nasabah</span><br><strong>${t.nasabah}</strong></div>
-        <div><span style="color:var(--text-muted); font-size:12px;">Jenis Sampah</span><br><span class="trash-tag ${t.jenis.toLowerCase()}">${icons[t.jenis]||'♻️'} ${t.jenis}</span></div>
-        <div><span style="color:var(--text-muted); font-size:12px;">Berat</span><br><strong>${t.berat} kg</strong></div>
-        <div><span style="color:var(--text-muted); font-size:12px;">Harga/kg</span><br><strong>${formatRupiah(t.harga)}</strong></div>
-        <div><span style="color:var(--text-muted); font-size:12px;">Total</span><br><strong style="color:var(--primary); font-size:16px;">${formatRupiah(t.total)}</strong></div>
-        <div><span style="color:var(--text-muted); font-size:12px;">Tanggal</span><br><strong>${formatDate(t.tanggal)}</strong></div>
-        <div><span style="color:var(--text-muted); font-size:12px;">Status</span><br><span class="badge-status ${statusClass[t.status]}">● ${t.status}</span></div>
-      </div>
-    `;
-    openModal('modalDetail');
+  // ---- DETAIL ----
+  async function showDetail(id) {
+    try {
+      const res = await TransaksiAPI.getById(id);
+      const t   = res.data;
+      currentDetail = t;
+      const jenisKey = (t.jenis_nama||'').toLowerCase();
+      document.getElementById('detailContent').innerHTML = `
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px 20px; background:#f9f9f9; padding:16px; border-radius:10px;">
+          <div><span style="color:var(--text-muted); font-size:12px;">ID Transaksi</span><br><strong>${t.kode}</strong></div>
+          <div><span style="color:var(--text-muted); font-size:12px;">Nasabah</span><br><strong>${t.nasabah_nama}</strong></div>
+          <div><span style="color:var(--text-muted); font-size:12px;">Jenis Sampah</span><br>
+            <span class="trash-tag ${jenisKey}">${t.jenis_ikon||'♻️'} ${t.jenis_nama}</span></div>
+          <div><span style="color:var(--text-muted); font-size:12px;">Berat</span><br><strong>${t.berat_kg} kg</strong></div>
+          <div><span style="color:var(--text-muted); font-size:12px;">Harga/kg</span><br><strong>${formatRupiah(t.harga_kg)}</strong></div>
+          <div><span style="color:var(--text-muted); font-size:12px;">Total</span><br>
+            <strong style="color:var(--primary); font-size:16px;">${formatRupiah(t.total)}</strong></div>
+          <div><span style="color:var(--text-muted); font-size:12px;">Tanggal</span><br><strong>${formatDate(t.tanggal)}</strong></div>
+          <div><span style="color:var(--text-muted); font-size:12px;">Status</span><br>
+            <span class="badge-status ${statusClass[t.status]||'info'}">● ${t.status}</span></div>
+          ${t.catatan ? `<div style="grid-column:span 2;"><span style="color:var(--text-muted); font-size:12px;">Catatan</span><br>${t.catatan}</div>` : ''}
+        </div>
+      `;
+      openModal('modalDetail');
+    } catch (err) {
+      showToast('Gagal memuat detail: ' + err.message, 'danger');
+    }
   }
 
-  function hapusTransaksi(idx) {
-    confirmAction('Hapus transaksi ini?', () => {
-      filteredData.splice(idx, 1);
-      renderTable(filteredData);
-      showToast('Transaksi dihapus', 'warning');
+  // ---- HAPUS ----
+  async function hapusTransaksi(id) {
+    confirmAction('Hapus transaksi ini?', async () => {
+      try {
+        await TransaksiAPI.delete(id);
+        showToast('Transaksi dihapus', 'warning');
+        loadTransaksi();
+      } catch (err) {
+        showToast('Gagal menghapus: ' + err.message, 'danger');
+      }
     });
   }
 
   function printDetail() {
-    showToast('Fitur cetak akan segera tersedia', 'warning');
+    window.print();
   }
+
+  // ---- INIT ----
+  document.addEventListener('DOMContentLoaded', async () => {
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('tglSetor').value = today;
+
+    // Load nasabah dari database ke select
+    try {
+      const nRes = await NasabahAPI.getAll({ status: 'Aktif' });
+      const sel  = document.getElementById('pilihNasabah');
+      nRes.data.forEach(n => {
+        const opt = document.createElement('option');
+        opt.value       = n.id;   // gunakan ID integer
+        opt.textContent = `${n.kode} — ${n.nama}`;
+        sel.appendChild(opt);
+      });
+    } catch (err) { showToast('Gagal load nasabah', 'danger'); }
+
+    // Load jenis sampah dari database ke select
+    try {
+      const jRes = await JenisAPI.getAll();
+      allJenis   = jRes.data || [];
+      const selJ = document.getElementById('jenisSetor');
+      allJenis.filter(j => j.aktif).forEach(j => {
+        const opt = document.createElement('option');
+        opt.value       = j.id;   // gunakan ID integer
+        opt.textContent = `${j.ikon} ${j.nama} — ${formatRupiah(j.harga_kg)}/kg`;
+        selJ.appendChild(opt);
+      });
+    } catch (err) { showToast('Gagal load jenis sampah', 'danger'); }
+
+    loadTransaksi();
+  });
 </script>
 
 </body>

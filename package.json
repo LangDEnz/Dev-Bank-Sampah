@@ -1,0 +1,31 @@
+{
+  "name": "dev-bank-sampah",
+  "version": "1.0.0",
+  "description": "To make it easy for you to get started with GitLab, here's a list of recommended next steps.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://gitlab.com/den-group575134/bank-sampah.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://gitlab.com/den-group575134/bank-sampah/issues"
+  },
+  "homepage": "https://gitlab.com/den-group575134/bank-sampah#readme",
+  "dependencies": {
+    "bcryptjs": "^3.0.3",
+    "cors": "^2.8.6",
+    "express": "^5.2.1",
+    "jsonwebtoken": "^9.0.3",
+    "sqlite3": "^6.0.1"
+  },
+  "allowScripts": {
+    "sqlite3@6.0.1": true
+  }
+}

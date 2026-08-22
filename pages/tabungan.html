@@ -107,60 +107,97 @@
   </div>
 </div>
 
+<script src="../js/api.js"></script>
 <script src="../js/app.js"></script>
 <script>
-  function renderTab() {
-    const q = document.getElementById('searchTab').value.toLowerCase();
+  let allNasabahTab = [];
+
+  async function loadTab() {
+    const q = document.getElementById('searchTab').value;
+    try {
+      const res    = await NasabahAPI.getAll(q ? { q } : {});
+      allNasabahTab = res.data || [];
+      renderTab(allNasabahTab);
+
+      // Update stat cards
+      const totalSaldo = allNasabahTab.reduce((s, n) => s + n.saldo, 0);
+      const cards = document.querySelectorAll('.stat-info h3');
+      if (cards[0]) cards[0].textContent = 'Rp ' + Number(totalSaldo).toLocaleString('id-ID');
+    } catch (err) {
+      showToast('Gagal memuat tabungan: ' + err.message, 'danger');
+    }
+  }
+
+  function renderTab(data) {
     const tbody = document.getElementById('tabunganTable');
     tbody.innerHTML = '';
-    const data = sampleNasabah.filter(n => n.nama.toLowerCase().includes(q) || n.id.toLowerCase().includes(q));
-    data.forEach((n, idx) => {
-      const lastTr = sampleTransaksi.filter(t => t.nasabah === n.nama && t.status === 'Selesai').sort((a,b) => b.tanggal.localeCompare(a.tanggal))[0];
+    if (data.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:40px;color:var(--text-muted);">Tidak ada data</td></tr>`;
+      return;
+    }
+    data.forEach((n) => {
       const tr = document.createElement('tr');
       tr.innerHTML = `
-        <td><strong>${n.id}</strong></td>
+        <td><strong>${n.kode}</strong></td>
         <td>${n.nama}</td>
         <td><strong style="color:var(--primary); font-size:15px;">${formatRupiah(n.saldo)}</strong></td>
         <td><span style="background:#fff8e1;color:#e65100;padding:3px 10px;border-radius:20px;font-size:12px;font-weight:600;">⭐ ${n.poin}</span></td>
-        <td>${lastTr ? formatDate(lastTr.tanggal) : '—'}</td>
+        <td>—</td>
         <td><span class="badge-status ${n.status==='Aktif'?'success':'danger'}">● ${n.status}</span></td>
-        <td><button class="btn btn-sm btn-outline" onclick="riwayatTab(${idx})">📜 Riwayat</button></td>
+        <td><button class="btn btn-sm btn-outline" onclick="riwayatTab(${n.id},'${n.nama}',${n.saldo})">📜 Riwayat</button></td>
       `;
       tbody.appendChild(tr);
     });
   }
 
-  function riwayatTab(idx) {
-    const n = sampleNasabah[idx];
-    const trList = sampleTransaksi.filter(t => t.nasabah === n.nama);
-    document.getElementById('riwayatTabTitle').textContent = `💰 Riwayat — ${n.nama}`;
-    let rows = '';
-    if (trList.length === 0) {
-      rows = '<p style="text-align:center;color:var(--text-muted);padding:30px;">Belum ada transaksi</p>';
-    } else {
-      rows = `<table style="width:100%;font-size:13px;"><thead><tr style="background:#f5f5f5;"><th style="padding:8px;">Tanggal</th><th>Keterangan</th><th>Jumlah</th><th>Status</th></tr></thead><tbody>`;
-      trList.forEach(t => {
-        const sc = { Selesai:'success', Pending:'warning', Dibatalkan:'danger' }[t.status];
-        rows += `<tr style="border-bottom:1px solid #eee;">
-          <td style="padding:8px;">${formatDate(t.tanggal)}</td>
-          <td>Setoran ${t.jenis} (${t.berat}kg)</td>
-          <td style="color:var(--primary);font-weight:700;">+${formatRupiah(t.total)}</td>
-          <td><span class="badge-status ${sc}">● ${t.status}</span></td>
-        </tr>`;
-      });
-      rows += '</tbody></table>';
-    }
-    document.getElementById('riwayatTabContent').innerHTML = `
-      <div style="background:#f1f8e9;padding:12px 16px;border-radius:8px;margin-bottom:16px;display:flex;justify-content:space-between;font-size:13.5px;">
-        <span>Saldo saat ini:</span>
-        <strong style="color:var(--primary);font-size:16px;">${formatRupiah(n.saldo)}</strong>
-      </div>
-      ${rows}
-    `;
+  async function riwayatTab(nasabahId, nama, saldo) {
+    document.getElementById('riwayatTabTitle').textContent = `💰 Riwayat — ${nama}`;
+    document.getElementById('riwayatTabContent').innerHTML =
+      `<div style="text-align:center;padding:20px;color:var(--text-muted);">Memuat...</div>`;
     openModal('modalRiwayatTab');
+
+    try {
+      const res    = await TransaksiAPI.getAll({ q: nama });
+      const trList = res.data || [];
+      let rows = '';
+      if (trList.length === 0) {
+        rows = '<p style="text-align:center;color:var(--text-muted);padding:30px;">Belum ada transaksi</p>';
+      } else {
+        rows = `<table style="width:100%;font-size:13px;border-collapse:collapse;">
+          <thead><tr style="background:#f5f5f5;">
+            <th style="padding:8px;text-align:left;">Tanggal</th>
+            <th style="padding:8px;text-align:left;">Keterangan</th>
+            <th style="padding:8px;text-align:right;">Jumlah</th>
+            <th style="padding:8px;">Status</th>
+          </tr></thead><tbody>`;
+        const scMap = { Selesai:'success', Pending:'warning', Dibatalkan:'danger' };
+        trList.forEach(t => {
+          rows += `<tr style="border-bottom:1px solid #eee;">
+            <td style="padding:8px;">${formatDate(t.tanggal)}</td>
+            <td style="padding:8px;">Setoran ${t.jenis_nama} (${t.berat_kg}kg)</td>
+            <td style="padding:8px;text-align:right;color:var(--primary);font-weight:700;">+${formatRupiah(t.total)}</td>
+            <td style="padding:8px;"><span class="badge-status ${scMap[t.status]||'info'}">● ${t.status}</span></td>
+          </tr>`;
+        });
+        rows += '</tbody></table>';
+      }
+      document.getElementById('riwayatTabContent').innerHTML = `
+        <div style="background:#f1f8e9;padding:12px 16px;border-radius:8px;margin-bottom:16px;display:flex;justify-content:space-between;font-size:13.5px;">
+          <span>Saldo saat ini:</span>
+          <strong style="color:var(--primary);font-size:16px;">${formatRupiah(saldo)}</strong>
+        </div>
+        ${rows}
+      `;
+    } catch (err) {
+      document.getElementById('riwayatTabContent').innerHTML =
+        `<p style="color:red;padding:20px;">Gagal memuat riwayat: ${err.message}</p>`;
+    }
   }
 
-  document.addEventListener('DOMContentLoaded', renderTab);
+  document.addEventListener('DOMContentLoaded', () => {
+    loadTab();
+    document.getElementById('searchTab').addEventListener('input', loadTab);
+  });
 </script>
 </body>
 </html>

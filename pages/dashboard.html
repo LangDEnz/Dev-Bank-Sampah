@@ -282,56 +282,113 @@
   </div>
 </div>
 
+<script src="../js/api.js"></script>
 <script src="../js/app.js"></script>
 <script>
-  // Build bar chart
-  const chartData = [
-    { bulan: 'Jan', kg: 820 }, { bulan: 'Feb', kg: 950 }, { bulan: 'Mar', kg: 1100 },
-    { bulan: 'Apr', kg: 870 }, { bulan: 'Mei', kg: 1200 }, { bulan: 'Jun', kg: 1050 },
-    { bulan: 'Jul', kg: 980 }, { bulan: 'Ags', kg: 1240 }, { bulan: 'Sep', kg: 0 },
-    { bulan: 'Okt', kg: 0  }, { bulan: 'Nov', kg: 0    }, { bulan: 'Des', kg: 0   },
-  ];
-  const maxKg = Math.max(...chartData.map(d => d.kg));
-  const chart = document.getElementById('barChart');
-  chartData.forEach(d => {
-    const bar = document.createElement('div');
-    bar.className = 'chart-bar';
-    const pct = d.kg ? (d.kg / maxKg * 100) : 2;
-    bar.style.height = pct + '%';
-    bar.innerHTML = `
-      ${d.kg ? `<span class="bar-value">${d.kg}</span>` : ''}
-      <span class="bar-label">${d.bulan}</span>
-    `;
-    if (!d.kg) bar.style.background = '#e0e0e0';
-    chart.appendChild(bar);
-  });
+  const bulanLabel = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Ags','Sep','Okt','Nov','Des'];
+  const statusClass = { Selesai:'success', Pending:'warning', Dibatalkan:'danger' };
 
-  // Set welcome name
-  document.addEventListener('DOMContentLoaded', () => {
-    const user = JSON.parse(sessionStorage.getItem('bs_user') || '{}');
-    const el = document.getElementById('welcomeName');
-    if (el) el.textContent = user.name || '—';
-  });
-
-  // Populate transaksi terbaru (5 items)
-  document.addEventListener('DOMContentLoaded', () => {
-    const tbody = document.getElementById('dashboardTransaksi');
-    if (!tbody) return;
-    const icons = { Plastik:'🧴', Kertas:'📰', Logam:'🔩', Organik:'🌿', Elektronik:'📱', Kaca:'🍶' };
-    const statusClass = { Selesai:'success', Pending:'warning', Dibatalkan:'danger' };
-    sampleTransaksi.slice(0, 5).forEach(t => {
-      const tr = document.createElement('tr');
-      tr.innerHTML = `
-        <td><strong>${t.id}</strong></td>
-        <td>${t.nasabah}</td>
-        <td><span class="trash-tag ${t.jenis.toLowerCase()}">${icons[t.jenis] || '♻️'} ${t.jenis}</span></td>
-        <td>${t.berat} kg</td>
-        <td><strong>${formatRupiah(t.total)}</strong></td>
-        <td>${formatDate(t.tanggal)}</td>
-        <td><span class="badge-status ${statusClass[t.status]}">● ${t.status}</span></td>
-      `;
-      tbody.appendChild(tr);
+  // ---- BUILD BAR CHART ----
+  function buildChart(grafikData) {
+    const chart = document.getElementById('barChart');
+    chart.innerHTML = '';
+    // Buat array 12 bulan default 0
+    const data = Array.from({length:12}, (_,i) => ({
+      bulan: bulanLabel[i], kg: 0
+    }));
+    grafikData.forEach(g => {
+      const idx = parseInt(g.bulan) - 1;
+      if (idx >= 0 && idx < 12) data[idx].kg = g.kg;
     });
+    const maxKg = Math.max(...data.map(d => d.kg), 1);
+    data.forEach(d => {
+      const bar = document.createElement('div');
+      bar.className = 'chart-bar';
+      const pct = d.kg ? (d.kg / maxKg * 100) : 2;
+      bar.style.height = pct + '%';
+      bar.innerHTML = `
+        ${d.kg ? `<span class="bar-value">${d.kg}</span>` : ''}
+        <span class="bar-label">${d.bulan}</span>
+      `;
+      if (!d.kg) bar.style.background = '#e0e0e0';
+      chart.appendChild(bar);
+    });
+  }
+
+  // ---- LOAD SEMUA DATA DARI DATABASE ----
+  async function loadDashboard() {
+    try {
+      const res = await DashboardAPI.getStats();
+      const d   = res.data;
+
+      // Stat cards
+      const cards = document.querySelectorAll('.stat-info h3');
+      if (cards[0]) cards[0].textContent = (d.total_sampah_bulan || 0).toFixed(1) + ' kg';
+      if (cards[1]) cards[1].textContent = 'Rp ' + Number(d.total_nilai_bulan||0).toLocaleString('id-ID');
+      if (cards[2]) cards[2].textContent = d.total_nasabah || 0;
+      if (cards[3]) cards[3].textContent = d.transaksi_hari_ini || 0;
+
+      // Saldo total
+      const saldoEl = document.querySelector('.card[style*="linear-gradient"] div:nth-child(2)');
+      if (saldoEl) saldoEl.textContent = 'Rp ' + Number(d.total_saldo||0).toLocaleString('id-ID');
+
+      // Grafik bulanan
+      buildChart(d.grafik_bulanan || []);
+
+      // Jenis sampah grid
+      if (d.komposisi_jenis && d.komposisi_jenis.length) {
+        const grid = document.querySelector('.grid-3');
+        if (grid) {
+          grid.innerHTML = '';
+          d.komposisi_jenis.forEach(j => {
+            const jenisKey = j.nama.toLowerCase();
+            const card = document.createElement('div');
+            card.className = 'card';
+            card.style.textAlign = 'center';
+            card.innerHTML = `
+              <div style="font-size:36px; margin-bottom:8px;">${j.ikon}</div>
+              <div style="font-weight:700; font-size:16px;">${(j.kg||0).toFixed(1)} kg</div>
+              <div class="trash-tag ${jenisKey}" style="margin-top:6px;">${j.nama}</div>
+              <div style="font-size:12px; color:var(--text-muted); margin-top:6px;">${formatRupiah(j.nilai||0)}</div>
+            `;
+            grid.appendChild(card);
+          });
+        }
+      }
+
+      // Transaksi terbaru
+      const tbody = document.getElementById('dashboardTransaksi');
+      if (tbody && d.transaksi_terbaru) {
+        tbody.innerHTML = '';
+        d.transaksi_terbaru.forEach(t => {
+          const jenisKey = (t.jenis_nama||'').toLowerCase();
+          const sc = statusClass[t.status] || 'info';
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td><strong>${t.kode}</strong></td>
+            <td>${t.nasabah_nama}</td>
+            <td><span class="trash-tag ${jenisKey}">${t.jenis_ikon||'♻️'} ${t.jenis_nama}</span></td>
+            <td>${t.berat_kg} kg</td>
+            <td><strong>${formatRupiah(t.total)}</strong></td>
+            <td>${formatDate(t.tanggal)}</td>
+            <td><span class="badge-status ${sc}">● ${t.status}</span></td>
+          `;
+          tbody.appendChild(tr);
+        });
+      }
+
+    } catch (err) {
+      console.error('Gagal load dashboard:', err);
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    // Welcome name dari localStorage
+    const user = JSON.parse(localStorage.getItem('bs_user') || '{}');
+    const el   = document.getElementById('welcomeName');
+    if (el) el.textContent = user.nama || user.name || '—';
+
+    loadDashboard();
   });
 </script>
 
