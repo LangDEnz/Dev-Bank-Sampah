@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login — Bank Sampah Hijau Lestari</title>
+  <link rel="stylesheet" href="css/login.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>♻️</text></svg>">
+</head>
+<body>
+
+<div class="login-wrapper">
+
+  <!-- ======== LEFT PANEL ======== -->
+  <div class="login-left">
+    <div class="brand-logo">
+      <div class="brand-icon">♻️</div>
+      <div class="brand-name">
+        <h1>Bank Sampah</h1>
+        <p>Hijau Lestari</p>
+      </div>
+    </div>
+
+    <p class="brand-tagline">
+      Bersama kami, sampah menjadi nilai. 
+      Kelola setoran, tabungan, dan laporan bank sampah Anda dengan mudah.
+    </p>
+
+    <div class="brand-features">
+      <div class="feature-item">
+        <span class="feat-icon">📦</span>
+        <p>Pencatatan setoran sampah real-time</p>
+      </div>
+      <div class="feature-item">
+        <span class="feat-icon">💰</span>
+        <p>Manajemen tabungan & poin nasabah</p>
+      </div>
+      <div class="feature-item">
+        <span class="feat-icon">📊</span>
+        <p>Laporan & statistik lengkap</p>
+      </div>
+      <div class="feature-item">
+        <span class="feat-icon">🌱</span>
+        <p>Pantau dampak lingkungan bersama</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======== RIGHT PANEL ======== -->
+  <div class="login-right">
+    <div class="login-form-container">
+      <div class="login-header">
+        <h2>Selamat Datang! 👋</h2>
+        <p>Masuk ke akun Bank Sampah Anda</p>
+      </div>
+
+      <!-- Error Message -->
+      <div class="error-message" id="errorMsg">
+        <span>⚠️</span>
+        <span id="errorText">Username atau password salah.</span>
+      </div>
+
+      <form id="loginForm" novalidate>
+        <div class="form-group">
+          <label class="form-label" for="username">Username</label>
+          <div class="input-wrapper">
+            <span class="input-icon">👤</span>
+            <input
+              type="text"
+              id="username"
+              name="username"
+              placeholder="Masukkan username Anda"
+              autocomplete="username"
+              required
+            >
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="password">Password</label>
+          <div class="input-wrapper">
+            <span class="input-icon">🔒</span>
+            <input
+              type="password"
+              id="password"
+              name="password"
+              placeholder="Masukkan password Anda"
+              autocomplete="current-password"
+              required
+            >
+            <button type="button" class="toggle-password" onclick="togglePassword()" id="eyeBtn" aria-label="Tampilkan password">
+              👁️
+            </button>
+          </div>
+        </div>
+
+        <div class="form-options">
+          <label class="checkbox-wrap">
+            <input type="checkbox" id="rememberMe">
+            Ingat saya
+          </label>
+          <a href="#" class="forgot-link">Lupa password?</a>
+        </div>
+
+        <button type="submit" class="btn-login" id="loginBtn">
+          <div class="spinner"></div>
+          <span class="btn-text">🔑 Masuk Sekarang</span>
+        </button>
+      </form>
+
+      <div class="divider">atau masuk sebagai</div>
+
+      <div class="quick-login">
+        <p class="quick-login-title">Akun Demo Tersedia:</p>
+
+        <button class="quick-btn" onclick="quickLogin('admin', 'admin123')">
+          <span class="role-icon">🛡️</span>
+          <div class="role-info">
+            <div class="role-name">Admin</div>
+            <div class="role-cred">admin / admin123</div>
+          </div>
+        </button>
+
+        <button class="quick-btn" onclick="quickLogin('petugas', 'petugas123')">
+          <span class="role-icon">👷</span>
+          <div class="role-info">
+            <div class="role-name">Petugas</div>
+            <div class="role-cred">petugas / petugas123</div>
+          </div>
+        </button>
+
+        <button class="quick-btn" onclick="quickLogin('nasabah', 'nasabah123')">
+          <span class="role-icon">👥</span>
+          <div class="role-info">
+            <div class="role-name">Nasabah</div>
+            <div class="role-cred">nasabah / nasabah123</div>
+          </div>
+        </button>
+      </div>
+
+      <div class="login-footer">
+        © 2026 Bank Sampah Hijau Lestari &nbsp;|&nbsp; v1.0.0
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  const USERS = {
+    admin:    { password: 'admin123',    name: 'Admin Utama',   role: 'Administrator' },
+    petugas:  { password: 'petugas123',  name: 'Budi Santoso',  role: 'Petugas'       },
+    nasabah:  { password: 'nasabah123',  name: 'Siti Rahayu',   role: 'Nasabah'       },
+  };
+
+  function togglePassword() {
+    const input = document.getElementById('password');
+    const btn   = document.getElementById('eyeBtn');
+    if (input.type === 'password') {
+      input.type = 'text';
+      btn.textContent = '🙈';
+    } else {
+      input.type = 'password';
+      btn.textContent = '👁️';
+    }
+  }
+
+  function quickLogin(user, pass) {
+    document.getElementById('username').value = user;
+    document.getElementById('password').value = pass;
+    document.getElementById('loginForm').dispatchEvent(new Event('submit'));
+  }
+
+  document.getElementById('loginForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const username = document.getElementById('username').value.trim();
+    const password = document.getElementById('password').value;
+    const btn      = document.getElementById('loginBtn');
+    const errBox   = document.getElementById('errorMsg');
+    const errText  = document.getElementById('errorText');
+
+    errBox.classList.remove('show');
+    btn.classList.add('loading');
+
+    setTimeout(() => {
+      btn.classList.remove('loading');
+      const user = USERS[username];
+
+      if (user && user.password === password) {
+        sessionStorage.setItem('bs_user', JSON.stringify({ username, ...user }));
+        window.location.href = 'pages/dashboard.html';
+      } else {
+        errText.textContent = 'Username atau password salah. Silakan coba lagi.';
+        errBox.classList.add('show');
+        document.getElementById('password').value = '';
+        document.getElementById('password').focus();
+      }
+    }, 1200);
+  });
+
+  // Auto-fill if remembered
+  window.addEventListener('DOMContentLoaded', () => {
+    const saved = localStorage.getItem('bs_remember');
+    if (saved) {
+      const { username } = JSON.parse(saved);
+      document.getElementById('username').value = username;
+      document.getElementById('rememberMe').checked = true;
+    }
+  });
+</script>
+
+</body>
+</html>

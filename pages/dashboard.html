@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard — Bank Sampah Hijau Lestari</title>
+  <link rel="stylesheet" href="../css/style.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>♻️</text></svg>">
+</head>
+<body>
+
+<div class="app-layout">
+
+  <!-- ============ SIDEBAR ============ -->
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-logo">
+        <div class="logo-icon">♻️</div>
+        <div class="logo-text">
+          <h2>Bank Sampah</h2>
+          <span>Hijau Lestari</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="sidebar-user">
+      <div class="user-avatar">👤</div>
+      <div class="user-info">
+        <h4 id="sidebarUserName">Loading...</h4>
+        <span id="sidebarUserRole">—</span>
+      </div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <p class="nav-section-title">Menu Utama</p>
+
+      <li class="nav-item active">
+        <a href="dashboard.html">
+          <span class="nav-icon">🏠</span> Dashboard
+        </a>
+      </li>
+      <li class="nav-item">
+        <a href="setor.html">
+          <span class="nav-icon">📦</span> Setor Sampah
+        </a>
+      </li>
+      <li class="nav-item">
+        <a href="nasabah.html">
+          <span class="nav-icon">👥</span> Data Nasabah
+        </a>
+      </li>
+      <li class="nav-item">
+        <a href="transaksi.html">
+          <span class="nav-icon">📋</span> Riwayat Transaksi
+        </a>
+      </li>
+
+      <p class="nav-section-title">Keuangan</p>
+      <li class="nav-item">
+        <a href="tabungan.html">
+          <span class="nav-icon">💰</span> Tabungan
+        </a>
+      </li>
+      <li class="nav-item">
+        <a href="penarikan.html">
+          <span class="nav-icon">🏧</span> Penarikan
+        </a>
+      </li>
+
+      <p class="nav-section-title">Laporan</p>
+      <li class="nav-item">
+        <a href="laporan.html">
+          <span class="nav-icon">📊</span> Laporan
+        </a>
+      </li>
+      <li class="nav-item">
+        <a href="harga.html">
+          <span class="nav-icon">🏷️</span> Harga Sampah
+        </a>
+      </li>
+
+      <p class="nav-section-title">Sistem</p>
+      <li class="nav-item">
+        <a href="pengaturan.html">
+          <span class="nav-icon">⚙️</span> Pengaturan
+        </a>
+      </li>
+    </nav>
+
+    <div class="sidebar-footer">
+      <a href="#" onclick="logout()">
+        <span>🚪</span> Keluar
+      </a>
+    </div>
+  </aside>
+
+  <!-- ============ MAIN CONTENT ============ -->
+  <div class="main-content">
+
+    <!-- TOPBAR -->
+    <header class="topbar">
+      <div class="topbar-left">
+        <h1>Dashboard</h1>
+        <p id="topbarDate">Memuat tanggal...</p>
+      </div>
+      <div class="topbar-right">
+        <button class="topbar-btn" title="Notifikasi">
+          🔔
+          <span class="badge">3</span>
+        </button>
+        <button class="topbar-btn" title="Bantuan">❓</button>
+        <div class="topbar-date">
+          🌱 Selamat datang, <strong id="welcomeName">—</strong>
+        </div>
+      </div>
+    </header>
+
+    <!-- PAGE CONTENT -->
+    <main class="page-content">
+
+      <!-- STAT CARDS -->
+      <div class="stats-grid">
+        <div class="stat-card green">
+          <div class="stat-icon green">♻️</div>
+          <div class="stat-info">
+            <h3>1.240 kg</h3>
+            <p>Total Sampah Bulan Ini</p>
+            <div class="stat-change up">↑ 12% dari bulan lalu</div>
+          </div>
+        </div>
+        <div class="stat-card yellow">
+          <div class="stat-icon yellow">💰</div>
+          <div class="stat-info">
+            <h3>Rp 3,72 jt</h3>
+            <p>Total Transaksi Bulan Ini</p>
+            <div class="stat-change up">↑ 8% dari bulan lalu</div>
+          </div>
+        </div>
+        <div class="stat-card blue">
+          <div class="stat-icon blue">👥</div>
+          <div class="stat-info">
+            <h3>247</h3>
+            <p>Total Nasabah Aktif</p>
+            <div class="stat-change up">↑ 5 nasabah baru</div>
+          </div>
+        </div>
+        <div class="stat-card red">
+          <div class="stat-icon red">📋</div>
+          <div class="stat-info">
+            <h3>38</h3>
+            <p>Transaksi Hari Ini</p>
+            <div class="stat-change down">↓ 3 dari kemarin</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CHART + TRANSAKSI TERBARU -->
+      <div class="two-col" style="margin-bottom: 24px;">
+
+        <!-- CHART -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title"><span>📊</span> Grafik Setoran Bulanan</div>
+            <select class="form-control" style="width:auto; padding:6px 12px; font-size:12px;">
+              <option>2026</option>
+              <option>2025</option>
+            </select>
+          </div>
+          <div class="chart-container chart-axis" id="barChart">
+            <!-- Bars injected by JS -->
+          </div>
+        </div>
+
+        <!-- INFO LINGKUNGAN -->
+        <div style="display:flex; flex-direction:column; gap:20px;">
+          <div class="card">
+            <div class="card-title" style="margin-bottom:16px;"><span>🌍</span> Dampak Lingkungan</div>
+            <div style="display:flex; flex-direction:column; gap:14px;">
+              <div>
+                <div style="display:flex; justify-content:space-between; font-size:13px; margin-bottom:5px;">
+                  <span>CO₂ Berkurang</span><strong>320 kg</strong>
+                </div>
+                <div class="progress-bar"><div class="progress-fill" style="width:64%"></div></div>
+              </div>
+              <div>
+                <div style="display:flex; justify-content:space-between; font-size:13px; margin-bottom:5px;">
+                  <span>Plastik Didaur Ulang</span><strong>480 kg</strong>
+                </div>
+                <div class="progress-bar"><div class="progress-fill" style="width:48%; background:linear-gradient(90deg,#0288d1,#03a9f4);"></div></div>
+              </div>
+              <div>
+                <div style="display:flex; justify-content:space-between; font-size:13px; margin-bottom:5px;">
+                  <span>Kertas Didaur Ulang</span><strong>210 kg</strong>
+                </div>
+                <div class="progress-bar"><div class="progress-fill" style="width:35%; background:linear-gradient(90deg,#f57f17,#ffa000);"></div></div>
+              </div>
+              <div>
+                <div style="display:flex; justify-content:space-between; font-size:13px; margin-bottom:5px;">
+                  <span>Logam Didaur Ulang</span><strong>95 kg</strong>
+                </div>
+                <div class="progress-bar"><div class="progress-fill" style="width:19%; background:linear-gradient(90deg,#880e4f,#ad1457);"></div></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card" style="background: linear-gradient(135deg, #2e7d32, #4caf50); color:#fff;">
+            <div style="font-size:13px; opacity:0.85; margin-bottom:8px;">Saldo Tabungan Total</div>
+            <div style="font-size:28px; font-weight:700;">Rp 12.450.000</div>
+            <div style="font-size:12px; opacity:0.75; margin-top:6px;">dari 247 nasabah aktif</div>
+            <a href="tabungan.html" style="display:inline-block; margin-top:14px; background:rgba(255,255,255,0.2); color:#fff; padding:8px 16px; border-radius:8px; font-size:12px; font-weight:600;">Lihat Detail →</a>
+          </div>
+        </div>
+      </div>
+
+      <!-- JENIS SAMPAH SUMMARY -->
+      <div class="grid-3" style="margin-bottom: 24px;">
+        <div class="card" style="text-align:center;">
+          <div style="font-size:36px; margin-bottom:8px;">🧴</div>
+          <div style="font-weight:700; font-size:16px;">480 kg</div>
+          <div class="trash-tag plastik" style="margin-top:6px;">Plastik</div>
+          <div style="font-size:12px; color:var(--text-muted); margin-top:6px;">Rp 1.200.000</div>
+        </div>
+        <div class="card" style="text-align:center;">
+          <div style="font-size:36px; margin-bottom:8px;">📰</div>
+          <div style="font-weight:700; font-size:16px;">210 kg</div>
+          <div class="trash-tag kertas" style="margin-top:6px;">Kertas</div>
+          <div style="font-size:12px; color:var(--text-muted); margin-top:6px;">Rp 315.000</div>
+        </div>
+        <div class="card" style="text-align:center;">
+          <div style="font-size:36px; margin-bottom:8px;">🔩</div>
+          <div style="font-weight:700; font-size:16px;">95 kg</div>
+          <div class="trash-tag logam" style="margin-top:6px;">Logam</div>
+          <div style="font-size:12px; color:var(--text-muted); margin-top:6px;">Rp 760.000</div>
+        </div>
+        <div class="card" style="text-align:center;">
+          <div style="font-size:36px; margin-bottom:8px;">🌿</div>
+          <div style="font-weight:700; font-size:16px;">320 kg</div>
+          <div class="trash-tag organik" style="margin-top:6px;">Organik</div>
+          <div style="font-size:12px; color:var(--text-muted); margin-top:6px;">Rp 160.000</div>
+        </div>
+        <div class="card" style="text-align:center;">
+          <div style="font-size:36px; margin-bottom:8px;">📱</div>
+          <div style="font-weight:700; font-size:16px;">35 kg</div>
+          <div class="trash-tag elektronik" style="margin-top:6px;">Elektronik</div>
+          <div style="font-size:12px; color:var(--text-muted); margin-top:6px;">Rp 525.000</div>
+        </div>
+        <div class="card" style="text-align:center;">
+          <div style="font-size:36px; margin-bottom:8px;">🍶</div>
+          <div style="font-weight:700; font-size:16px;">100 kg</div>
+          <div class="trash-tag kaca" style="margin-top:6px;">Kaca</div>
+          <div style="font-size:12px; color:var(--text-muted); margin-top:6px;">Rp 100.000</div>
+        </div>
+      </div>
+
+      <!-- TRANSAKSI TERBARU -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title"><span>🕒</span> Transaksi Terbaru</div>
+          <a href="transaksi.html" class="btn btn-outline btn-sm">Lihat Semua</a>
+        </div>
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Nasabah</th>
+                <th>Jenis Sampah</th>
+                <th>Berat</th>
+                <th>Total</th>
+                <th>Tanggal</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="dashboardTransaksi">
+              <!-- filled by JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<script src="../js/app.js"></script>
+<script>
+  // Build bar chart
+  const chartData = [
+    { bulan: 'Jan', kg: 820 }, { bulan: 'Feb', kg: 950 }, { bulan: 'Mar', kg: 1100 },
+    { bulan: 'Apr', kg: 870 }, { bulan: 'Mei', kg: 1200 }, { bulan: 'Jun', kg: 1050 },
+    { bulan: 'Jul', kg: 980 }, { bulan: 'Ags', kg: 1240 }, { bulan: 'Sep', kg: 0 },
+    { bulan: 'Okt', kg: 0  }, { bulan: 'Nov', kg: 0    }, { bulan: 'Des', kg: 0   },
+  ];
+  const maxKg = Math.max(...chartData.map(d => d.kg));
+  const chart = document.getElementById('barChart');
+  chartData.forEach(d => {
+    const bar = document.createElement('div');
+    bar.className = 'chart-bar';
+    const pct = d.kg ? (d.kg / maxKg * 100) : 2;
+    bar.style.height = pct + '%';
+    bar.innerHTML = `
+      ${d.kg ? `<span class="bar-value">${d.kg}</span>` : ''}
+      <span class="bar-label">${d.bulan}</span>
+    `;
+    if (!d.kg) bar.style.background = '#e0e0e0';
+    chart.appendChild(bar);
+  });
+
+  // Set welcome name
+  document.addEventListener('DOMContentLoaded', () => {
+    const user = JSON.parse(sessionStorage.getItem('bs_user') || '{}');
+    const el = document.getElementById('welcomeName');
+    if (el) el.textContent = user.name || '—';
+  });
+
+  // Populate transaksi terbaru (5 items)
+  document.addEventListener('DOMContentLoaded', () => {
+    const tbody = document.getElementById('dashboardTransaksi');
+    if (!tbody) return;
+    const icons = { Plastik:'🧴', Kertas:'📰', Logam:'🔩', Organik:'🌿', Elektronik:'📱', Kaca:'🍶' };
+    const statusClass = { Selesai:'success', Pending:'warning', Dibatalkan:'danger' };
+    sampleTransaksi.slice(0, 5).forEach(t => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td><strong>${t.id}</strong></td>
+        <td>${t.nasabah}</td>
+        <td><span class="trash-tag ${t.jenis.toLowerCase()}">${icons[t.jenis] || '♻️'} ${t.jenis}</span></td>
+        <td>${t.berat} kg</td>
+        <td><strong>${formatRupiah(t.total)}</strong></td>
+        <td>${formatDate(t.tanggal)}</td>
+        <td><span class="badge-status ${statusClass[t.status]}">● ${t.status}</span></td>
+      `;
+      tbody.appendChild(tr);
+    });
+  });
+</script>
+
+</body>
+</html>

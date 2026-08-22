@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pengaturan — Bank Sampah Hijau Lestari</title>
+  <link rel="stylesheet" href="../css/style.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>♻️</text></svg>">
+</head>
+<body>
+<div class="app-layout">
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-logo">
+        <div class="logo-icon">♻️</div>
+        <div class="logo-text"><h2>Bank Sampah</h2><span>Hijau Lestari</span></div>
+      </div>
+    </div>
+    <div class="sidebar-user">
+      <div class="user-avatar">👤</div>
+      <div class="user-info"><h4 id="sidebarUserName">Loading...</h4><span id="sidebarUserRole">—</span></div>
+    </div>
+    <nav class="sidebar-nav">
+      <p class="nav-section-title">Menu Utama</p>
+      <li class="nav-item"><a href="dashboard.html"><span class="nav-icon">🏠</span> Dashboard</a></li>
+      <li class="nav-item"><a href="setor.html"><span class="nav-icon">📦</span> Setor Sampah</a></li>
+      <li class="nav-item"><a href="nasabah.html"><span class="nav-icon">👥</span> Data Nasabah</a></li>
+      <li class="nav-item"><a href="transaksi.html"><span class="nav-icon">📋</span> Riwayat Transaksi</a></li>
+      <p class="nav-section-title">Keuangan</p>
+      <li class="nav-item"><a href="tabungan.html"><span class="nav-icon">💰</span> Tabungan</a></li>
+      <li class="nav-item"><a href="penarikan.html"><span class="nav-icon">🏧</span> Penarikan</a></li>
+      <p class="nav-section-title">Laporan</p>
+      <li class="nav-item"><a href="laporan.html"><span class="nav-icon">📊</span> Laporan</a></li>
+      <li class="nav-item"><a href="harga.html"><span class="nav-icon">🏷️</span> Harga Sampah</a></li>
+      <p class="nav-section-title">Sistem</p>
+      <li class="nav-item active"><a href="pengaturan.html"><span class="nav-icon">⚙️</span> Pengaturan</a></li>
+    </nav>
+    <div class="sidebar-footer">
+      <a href="#" onclick="logout()"><span>🚪</span> Keluar</a>
+    </div>
+  </aside>
+
+  <div class="main-content">
+    <header class="topbar">
+      <div class="topbar-left"><h1>Pengaturan</h1><p id="topbarDate">Memuat tanggal...</p></div>
+      <div class="topbar-right">
+        <button class="topbar-btn">🔔<span class="badge">3</span></button>
+      </div>
+    </header>
+
+    <main class="page-content">
+      <div class="grid-2" style="gap:24px; align-items:start;">
+
+        <!-- PROFIL BANK SAMPAH -->
+        <div class="card">
+          <div class="card-title" style="margin-bottom:20px;"><span>🏢</span> Profil Bank Sampah</div>
+          <div style="text-align:center; margin-bottom:20px;">
+            <div style="width:80px; height:80px; background:var(--primary); border-radius:20px; display:flex; align-items:center; justify-content:center; font-size:42px; margin:0 auto 12px;">♻️</div>
+            <button class="btn btn-sm btn-outline">📷 Ganti Logo</button>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Nama Bank Sampah</label>
+            <input type="text" class="form-control" value="Bank Sampah Hijau Lestari">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Alamat</label>
+            <textarea class="form-control" rows="2">Jl. Lingkungan Hidup No. 1, Kecamatan Sehat, Kota Hijau</textarea>
+          </div>
+          <div class="grid-2">
+            <div class="form-group">
+              <label class="form-label">Telepon</label>
+              <input type="tel" class="form-control" value="021-12345678">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Email</label>
+              <input type="email" class="form-control" value="info@bshijaulestari.id">
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Nomor Rekening</label>
+            <input type="text" class="form-control" value="1234-5678-9012">
+          </div>
+          <button class="btn btn-primary" onclick="showToast('Profil berhasil disimpan!','success')">💾 Simpan Profil</button>
+        </div>
+
+        <div style="display:flex; flex-direction:column; gap:24px;">
+
+          <!-- AKUN PENGGUNA -->
+          <div class="card">
+            <div class="card-title" style="margin-bottom:20px;"><span>👤</span> Akun Saya</div>
+            <div class="form-group">
+              <label class="form-label">Nama Lengkap</label>
+              <input type="text" class="form-control" id="akunNama">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Role</label>
+              <input type="text" class="form-control" id="akunRole" readonly style="background:#f5f5f5;">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Password Baru</label>
+              <input type="password" class="form-control" placeholder="Biarkan kosong jika tidak ingin mengubah">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Konfirmasi Password</label>
+              <input type="password" class="form-control" placeholder="Ulangi password baru">
+            </div>
+            <button class="btn btn-primary" onclick="showToast('Password berhasil diperbarui!','success')">🔐 Perbarui Password</button>
+          </div>
+
+          <!-- NOTIFIKASI -->
+          <div class="card">
+            <div class="card-title" style="margin-bottom:16px;"><span>🔔</span> Pengaturan Notifikasi</div>
+            <div style="display:flex; flex-direction:column; gap:14px;">
+              <div style="display:flex; justify-content:space-between; align-items:center;">
+                <div><div style="font-size:13.5px; font-weight:500;">Notifikasi Setoran Baru</div><div style="font-size:12px; color:var(--text-muted);">Kirim notif setiap ada setoran masuk</div></div>
+                <label class="toggle-switch"><input type="checkbox" checked><span class="toggle-slider"></span></label>
+              </div>
+              <div style="display:flex; justify-content:space-between; align-items:center;">
+                <div><div style="font-size:13.5px; font-weight:500;">Laporan Mingguan</div><div style="font-size:12px; color:var(--text-muted);">Kirim ringkasan setiap Senin pagi</div></div>
+                <label class="toggle-switch"><input type="checkbox" checked><span class="toggle-slider"></span></label>
+              </div>
+              <div style="display:flex; justify-content:space-between; align-items:center;">
+                <div><div style="font-size:13.5px; font-weight:500;">Peringatan Saldo Minimum</div><div style="font-size:12px; color:var(--text-muted);">Notif saat saldo kas di bawah batas</div></div>
+                <label class="toggle-switch"><input type="checkbox"><span class="toggle-slider"></span></label>
+              </div>
+            </div>
+          </div>
+
+          <!-- MANAJEMEN PENGGUNA -->
+          <div class="card">
+            <div class="card-title" style="margin-bottom:16px;"><span>🛡️</span> Pengguna Sistem</div>
+            <div style="display:flex; flex-direction:column; gap:10px;">
+              <div style="display:flex; align-items:center; justify-content:space-between; padding:10px; background:#f9f9f9; border-radius:8px;">
+                <div style="display:flex; align-items:center; gap:10px;">
+                  <div style="font-size:20px;">🛡️</div>
+                  <div><div style="font-size:13px; font-weight:600;">Admin Utama</div><div style="font-size:11px; color:var(--text-muted);">admin · Administrator</div></div>
+                </div>
+                <span class="badge-status success">● Aktif</span>
+              </div>
+              <div style="display:flex; align-items:center; justify-content:space-between; padding:10px; background:#f9f9f9; border-radius:8px;">
+                <div style="display:flex; align-items:center; gap:10px;">
+                  <div style="font-size:20px;">👷</div>
+                  <div><div style="font-size:13px; font-weight:600;">Budi Santoso</div><div style="font-size:11px; color:var(--text-muted);">petugas · Petugas</div></div>
+                </div>
+                <span class="badge-status success">● Aktif</span>
+              </div>
+            </div>
+            <button class="btn btn-outline btn-sm" style="margin-top:12px;" onclick="showToast('Fitur manajemen pengguna akan segera tersedia','warning')">＋ Tambah Pengguna</button>
+          </div>
+
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<style>
+.toggle-switch {
+  position: relative;
+  display: inline-block;
+  width: 46px;
+  height: 24px;
+  flex-shrink: 0;
+}
+.toggle-switch input { opacity: 0; width: 0; height: 0; }
+.toggle-slider {
+  position: absolute;
+  cursor: pointer;
+  inset: 0;
+  background: #ccc;
+  border-radius: 24px;
+  transition: 0.3s;
+}
+.toggle-slider::before {
+  content: '';
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  left: 3px;
+  bottom: 3px;
+  background: #fff;
+  border-radius: 50%;
+  transition: 0.3s;
+}
+.toggle-switch input:checked + .toggle-slider { background: var(--primary-light); }
+.toggle-switch input:checked + .toggle-slider::before { transform: translateX(22px); }
+</style>
+
+<script src="../js/app.js"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const user = JSON.parse(sessionStorage.getItem('bs_user') || '{}');
+    const nama = document.getElementById('akunNama');
+    const role = document.getElementById('akunRole');
+    if (nama) nama.value = user.name || '';
+    if (role) role.value = user.role || '';
+  });
+</script>
+</body>
+</html>

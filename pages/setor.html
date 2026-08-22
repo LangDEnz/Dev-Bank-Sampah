@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Setor Sampah — Bank Sampah Hijau Lestari</title>
+  <link rel="stylesheet" href="../css/style.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>♻️</text></svg>">
+</head>
+<body>
+
+<div class="app-layout">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-logo">
+        <div class="logo-icon">♻️</div>
+        <div class="logo-text">
+          <h2>Bank Sampah</h2>
+          <span>Hijau Lestari</span>
+        </div>
+      </div>
+    </div>
+    <div class="sidebar-user">
+      <div class="user-avatar">👤</div>
+      <div class="user-info">
+        <h4 id="sidebarUserName">Loading...</h4>
+        <span id="sidebarUserRole">—</span>
+      </div>
+    </div>
+    <nav class="sidebar-nav">
+      <p class="nav-section-title">Menu Utama</p>
+      <li class="nav-item"><a href="dashboard.html"><span class="nav-icon">🏠</span> Dashboard</a></li>
+      <li class="nav-item active"><a href="setor.html"><span class="nav-icon">📦</span> Setor Sampah</a></li>
+      <li class="nav-item"><a href="nasabah.html"><span class="nav-icon">👥</span> Data Nasabah</a></li>
+      <li class="nav-item"><a href="transaksi.html"><span class="nav-icon">📋</span> Riwayat Transaksi</a></li>
+      <p class="nav-section-title">Keuangan</p>
+      <li class="nav-item"><a href="tabungan.html"><span class="nav-icon">💰</span> Tabungan</a></li>
+      <li class="nav-item"><a href="penarikan.html"><span class="nav-icon">🏧</span> Penarikan</a></li>
+      <p class="nav-section-title">Laporan</p>
+      <li class="nav-item"><a href="laporan.html"><span class="nav-icon">📊</span> Laporan</a></li>
+      <li class="nav-item"><a href="harga.html"><span class="nav-icon">🏷️</span> Harga Sampah</a></li>
+      <p class="nav-section-title">Sistem</p>
+      <li class="nav-item"><a href="pengaturan.html"><span class="nav-icon">⚙️</span> Pengaturan</a></li>
+    </nav>
+    <div class="sidebar-footer">
+      <a href="#" onclick="logout()"><span>🚪</span> Keluar</a>
+    </div>
+  </aside>
+
+  <!-- MAIN CONTENT -->
+  <div class="main-content">
+    <header class="topbar">
+      <div class="topbar-left">
+        <h1>Setor Sampah</h1>
+        <p id="topbarDate">Memuat tanggal...</p>
+      </div>
+      <div class="topbar-right">
+        <button class="topbar-btn">🔔<span class="badge">3</span></button>
+        <button class="btn btn-primary" onclick="openModal('modalSetor')">
+          ＋ Transaksi Baru
+        </button>
+      </div>
+    </header>
+
+    <main class="page-content">
+
+      <!-- STAT MINI -->
+      <div class="grid-3" style="margin-bottom:24px;">
+        <div class="stat-card green">
+          <div class="stat-icon green">📦</div>
+          <div class="stat-info">
+            <h3>38</h3>
+            <p>Setoran Hari Ini</p>
+          </div>
+        </div>
+        <div class="stat-card yellow">
+          <div class="stat-icon yellow">⚖️</div>
+          <div class="stat-info">
+            <h3>142 kg</h3>
+            <p>Berat Hari Ini</p>
+          </div>
+        </div>
+        <div class="stat-card blue">
+          <div class="stat-icon blue">💵</div>
+          <div class="stat-info">
+            <h3>Rp 384.000</h3>
+            <p>Nilai Hari Ini</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- DAFTAR SETORAN -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title"><span>📋</span> Daftar Setoran</div>
+          <div style="display:flex; gap:10px;">
+            <select class="form-control" style="width:auto; padding:8px 12px; font-size:13px;" id="filterJenis">
+              <option value="">Semua Jenis</option>
+              <option>Plastik</option>
+              <option>Kertas</option>
+              <option>Logam</option>
+              <option>Organik</option>
+              <option>Elektronik</option>
+              <option>Kaca</option>
+            </select>
+            <select class="form-control" style="width:auto; padding:8px 12px; font-size:13px;" id="filterStatus">
+              <option value="">Semua Status</option>
+              <option>Selesai</option>
+              <option>Pending</option>
+              <option>Dibatalkan</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="search-bar">
+          <div class="search-input-wrap">
+            <span class="search-icon">🔍</span>
+            <input type="text" id="searchSetor" placeholder="Cari nama nasabah atau ID transaksi...">
+          </div>
+          <button class="btn btn-primary" onclick="openModal('modalSetor')">＋ Tambah</button>
+        </div>
+
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Nasabah</th>
+                <th>Jenis Sampah</th>
+                <th>Berat (kg)</th>
+                <th>Harga/kg</th>
+                <th>Total</th>
+                <th>Tanggal</th>
+                <th>Status</th>
+                <th>Aksi</th>
+              </tr>
+            </thead>
+            <tbody id="setorTable"><!-- JS --></tbody>
+          </table>
+        </div>
+
+        <div class="pagination">
+          <div class="pagination-info" id="paginasiInfo">Menampilkan 1-8 dari 8 data</div>
+          <div class="pagination-btns">
+            <button class="page-btn">‹</button>
+            <button class="page-btn active">1</button>
+            <button class="page-btn">2</button>
+            <button class="page-btn">›</button>
+          </div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<!-- MODAL TAMBAH SETORAN -->
+<div class="modal-overlay" id="modalSetor">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">📦 Tambah Setoran Sampah</div>
+      <button class="modal-close" onclick="closeModal('modalSetor')">✕</button>
+    </div>
+
+    <form id="formSetor" onsubmit="submitSetor(event)">
+      <div class="form-group">
+        <label class="form-label">Nasabah</label>
+        <select class="form-control" id="pilihNasabah" required onchange="updateNasabahInfo()">
+          <option value="">— Pilih Nasabah —</option>
+        </select>
+      </div>
+
+      <div id="infoNasabah" style="display:none; background:#f1f8e9; padding:12px 16px; border-radius:8px; margin-bottom:16px; font-size:13px; border-left:3px solid var(--primary);">
+        <strong id="infNama">—</strong> &nbsp;|&nbsp;
+        <span>Saldo: <strong id="infSaldo">—</strong></span> &nbsp;|&nbsp;
+        <span>Poin: <strong id="infPoin">—</strong></span>
+      </div>
+
+      <div class="grid-2">
+        <div class="form-group">
+          <label class="form-label">Jenis Sampah</label>
+          <select class="form-control" id="jenisSetor" required onchange="hitungTotal()">
+            <option value="">— Pilih Jenis —</option>
+            <option value="Plastik">🧴 Plastik — Rp 2.500/kg</option>
+            <option value="Kertas">📰 Kertas — Rp 1.500/kg</option>
+            <option value="Logam">🔩 Logam — Rp 8.000/kg</option>
+            <option value="Organik">🌿 Organik — Rp 500/kg</option>
+            <option value="Elektronik">📱 Elektronik — Rp 15.000/kg</option>
+            <option value="Kaca">🍶 Kaca — Rp 1.000/kg</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Berat (kg)</label>
+          <div class="input-group">
+            <span class="input-icon">⚖️</span>
+            <input type="number" class="form-control" id="beratSetor" min="0.1" step="0.1"
+                   placeholder="0.0" required oninput="hitungTotal()">
+          </div>
+        </div>
+      </div>
+
+      <!-- PREVIEW HARGA -->
+      <div id="previewHarga" style="display:none; background:#fff8e1; padding:14px 16px; border-radius:8px; margin-bottom:16px; border-left:3px solid var(--secondary);">
+        <div style="display:flex; justify-content:space-between; font-size:13px; margin-bottom:6px;">
+          <span>Harga per kg:</span>
+          <strong id="prevHargaKg">—</strong>
+        </div>
+        <div style="display:flex; justify-content:space-between; font-size:13px; margin-bottom:6px;">
+          <span>Berat:</span>
+          <strong id="prevBerat">—</strong>
+        </div>
+        <div style="display:flex; justify-content:space-between; font-size:15px; border-top:1px dashed #ffd54f; padding-top:8px;">
+          <strong>Total:</strong>
+          <strong style="color:var(--primary);" id="prevTotal">—</strong>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Tanggal Setoran</label>
+        <input type="date" class="form-control" id="tglSetor" required>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Catatan (opsional)</label>
+        <textarea class="form-control" id="catatanSetor" rows="2" placeholder="Tambahkan catatan..."></textarea>
+      </div>
+    </form>
+
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modalSetor')">Batal</button>
+      <button class="btn btn-primary" onclick="submitSetor()">💾 Simpan Setoran</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL DETAIL -->
+<div class="modal-overlay" id="modalDetail">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">🔍 Detail Transaksi</div>
+      <button class="modal-close" onclick="closeModal('modalDetail')">✕</button>
+    </div>
+    <div id="detailContent" style="font-size:14px; line-height:2;"></div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modalDetail')">Tutup</button>
+      <button class="btn btn-primary" onclick="printDetail()">🖨️ Cetak</button>
+    </div>
+  </div>
+</div>
+
+<script src="../js/app.js"></script>
+<script>
+  const icons = { Plastik:'🧴', Kertas:'📰', Logam:'🔩', Organik:'🌿', Elektronik:'📱', Kaca:'🍶' };
+  const statusClass = { Selesai:'success', Pending:'warning', Dibatalkan:'danger' };
+  let filteredData = [...sampleTransaksi];
+
+  // Set today's date
+  document.addEventListener('DOMContentLoaded', () => {
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('tglSetor').value = today;
+
+    // Populate nasabah select
+    const sel = document.getElementById('pilihNasabah');
+    sampleNasabah.forEach(n => {
+      const opt = document.createElement('option');
+      opt.value = n.id;
+      opt.textContent = `${n.id} — ${n.nama}`;
+      sel.appendChild(opt);
+    });
+
+    renderTable(sampleTransaksi);
+  });
+
+  function renderTable(data) {
+    const tbody = document.getElementById('setorTable');
+    tbody.innerHTML = '';
+    if (data.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="9" style="text-align:center; padding:40px; color:var(--text-muted);">Tidak ada data ditemukan</td></tr>`;
+      return;
+    }
+    data.forEach((t, idx) => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td><strong>${t.id}</strong></td>
+        <td>${t.nasabah}</td>
+        <td><span class="trash-tag ${t.jenis.toLowerCase()}">${icons[t.jenis]||'♻️'} ${t.jenis}</span></td>
+        <td>${t.berat} kg</td>
+        <td>Rp ${Number(t.harga).toLocaleString('id-ID')}</td>
+        <td><strong style="color:var(--primary);">${formatRupiah(t.total)}</strong></td>
+        <td>${formatDate(t.tanggal)}</td>
+        <td><span class="badge-status ${statusClass[t.status]}">● ${t.status}</span></td>
+        <td>
+          <button class="btn-icon" title="Detail" onclick="showDetail(${idx})">👁️</button>
+          <button class="btn-icon" title="Edit" style="margin:0 4px;" onclick="showToast('Fitur edit akan segera tersedia','warning')">✏️</button>
+          <button class="btn-icon" title="Hapus" onclick="hapusTransaksi(${idx})">🗑️</button>
+        </td>
+      `;
+      tbody.appendChild(tr);
+    });
+    document.getElementById('paginasiInfo').textContent = `Menampilkan 1-${data.length} dari ${data.length} data`;
+  }
+
+  // Search & Filter
+  function applyFilter() {
+    const q       = document.getElementById('searchSetor').value.toLowerCase();
+    const jenis   = document.getElementById('filterJenis').value;
+    const status  = document.getElementById('filterStatus').value;
+    filteredData = sampleTransaksi.filter(t =>
+      (t.nasabah.toLowerCase().includes(q) || t.id.toLowerCase().includes(q)) &&
+      (!jenis  || t.jenis  === jenis) &&
+      (!status || t.status === status)
+    );
+    renderTable(filteredData);
+  }
+
+  document.getElementById('searchSetor').addEventListener('input', applyFilter);
+  document.getElementById('filterJenis').addEventListener('change', applyFilter);
+  document.getElementById('filterStatus').addEventListener('change', applyFilter);
+
+  // Hitung total
+  function hitungTotal() {
+    const jenis = document.getElementById('jenisSetor').value;
+    const berat = parseFloat(document.getElementById('beratSetor').value) || 0;
+    const preview = document.getElementById('previewHarga');
+    if (jenis && berat > 0) {
+      const harga = hargaSampah[jenis] || 0;
+      const total = harga * berat;
+      preview.style.display = 'block';
+      document.getElementById('prevHargaKg').textContent  = formatRupiah(harga);
+      document.getElementById('prevBerat').textContent    = berat + ' kg';
+      document.getElementById('prevTotal').textContent   = formatRupiah(total);
+    } else {
+      preview.style.display = 'none';
+    }
+  }
+
+  // Update info nasabah
+  function updateNasabahInfo() {
+    const id = document.getElementById('pilihNasabah').value;
+    const infoBox = document.getElementById('infoNasabah');
+    if (!id) { infoBox.style.display = 'none'; return; }
+    const n = sampleNasabah.find(x => x.id === id);
+    if (n) {
+      infoBox.style.display = 'block';
+      document.getElementById('infNama').textContent  = n.nama;
+      document.getElementById('infSaldo').textContent = formatRupiah(n.saldo);
+      document.getElementById('infPoin').textContent  = n.poin + ' poin';
+    }
+  }
+
+  // Submit setoran
+  function submitSetor() {
+    const nasabahId = document.getElementById('pilihNasabah').value;
+    const jenis     = document.getElementById('jenisSetor').value;
+    const berat     = parseFloat(document.getElementById('beratSetor').value);
+    const tgl       = document.getElementById('tglSetor').value;
+
+    if (!nasabahId || !jenis || !berat || !tgl) {
+      showToast('Harap lengkapi semua field!', 'danger');
+      return;
+    }
+
+    const nasabah = sampleNasabah.find(n => n.id === nasabahId);
+    const harga   = hargaSampah[jenis];
+    const total   = harga * berat;
+    const newTr   = {
+      id: 'TR' + String(sampleTransaksi.length + 1).padStart(3, '0'),
+      nasabah: nasabah.nama,
+      jenis, berat,
+      harga, total,
+      tanggal: tgl,
+      status: 'Selesai'
+    };
+
+    sampleTransaksi.unshift(newTr);
+    closeModal('modalSetor');
+    renderTable(sampleTransaksi);
+    showToast(`Setoran ${newTr.id} berhasil disimpan!`, 'success');
+
+    // Reset form
+    document.getElementById('pilihNasabah').value = '';
+    document.getElementById('jenisSetor').value   = '';
+    document.getElementById('beratSetor').value   = '';
+    document.getElementById('catatanSetor').value = '';
+    document.getElementById('previewHarga').style.display = 'none';
+    document.getElementById('infoNasabah').style.display  = 'none';
+  }
+
+  // Show detail
+  function showDetail(idx) {
+    const t = filteredData[idx];
+    const content = document.getElementById('detailContent');
+    content.innerHTML = `
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px 20px; background:#f9f9f9; padding:16px; border-radius:10px;">
+        <div><span style="color:var(--text-muted); font-size:12px;">ID Transaksi</span><br><strong>${t.id}</strong></div>
+        <div><span style="color:var(--text-muted); font-size:12px;">Nasabah</span><br><strong>${t.nasabah}</strong></div>
+        <div><span style="color:var(--text-muted); font-size:12px;">Jenis Sampah</span><br><span class="trash-tag ${t.jenis.toLowerCase()}">${icons[t.jenis]||'♻️'} ${t.jenis}</span></div>
+        <div><span style="color:var(--text-muted); font-size:12px;">Berat</span><br><strong>${t.berat} kg</strong></div>
+        <div><span style="color:var(--text-muted); font-size:12px;">Harga/kg</span><br><strong>${formatRupiah(t.harga)}</strong></div>
+        <div><span style="color:var(--text-muted); font-size:12px;">Total</span><br><strong style="color:var(--primary); font-size:16px;">${formatRupiah(t.total)}</strong></div>
+        <div><span style="color:var(--text-muted); font-size:12px;">Tanggal</span><br><strong>${formatDate(t.tanggal)}</strong></div>
+        <div><span style="color:var(--text-muted); font-size:12px;">Status</span><br><span class="badge-status ${statusClass[t.status]}">● ${t.status}</span></div>
+      </div>
+    `;
+    openModal('modalDetail');
+  }
+
+  function hapusTransaksi(idx) {
+    confirmAction('Hapus transaksi ini?', () => {
+      filteredData.splice(idx, 1);
+      renderTable(filteredData);
+      showToast('Transaksi dihapus', 'warning');
+    });
+  }
+
+  function printDetail() {
+    showToast('Fitur cetak akan segera tersedia', 'warning');
+  }
+</script>
+
+</body>
+</html>

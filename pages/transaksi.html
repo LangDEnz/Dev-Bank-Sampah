@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Riwayat Transaksi — Bank Sampah Hijau Lestari</title>
+  <link rel="stylesheet" href="../css/style.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>♻️</text></svg>">
+</head>
+<body>
+
+<div class="app-layout">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-logo">
+        <div class="logo-icon">♻️</div>
+        <div class="logo-text">
+          <h2>Bank Sampah</h2>
+          <span>Hijau Lestari</span>
+        </div>
+      </div>
+    </div>
+    <div class="sidebar-user">
+      <div class="user-avatar">👤</div>
+      <div class="user-info">
+        <h4 id="sidebarUserName">Loading...</h4>
+        <span id="sidebarUserRole">—</span>
+      </div>
+    </div>
+    <nav class="sidebar-nav">
+      <p class="nav-section-title">Menu Utama</p>
+      <li class="nav-item"><a href="dashboard.html"><span class="nav-icon">🏠</span> Dashboard</a></li>
+      <li class="nav-item"><a href="setor.html"><span class="nav-icon">📦</span> Setor Sampah</a></li>
+      <li class="nav-item"><a href="nasabah.html"><span class="nav-icon">👥</span> Data Nasabah</a></li>
+      <li class="nav-item active"><a href="transaksi.html"><span class="nav-icon">📋</span> Riwayat Transaksi</a></li>
+      <p class="nav-section-title">Keuangan</p>
+      <li class="nav-item"><a href="tabungan.html"><span class="nav-icon">💰</span> Tabungan</a></li>
+      <li class="nav-item"><a href="penarikan.html"><span class="nav-icon">🏧</span> Penarikan</a></li>
+      <p class="nav-section-title">Laporan</p>
+      <li class="nav-item"><a href="laporan.html"><span class="nav-icon">📊</span> Laporan</a></li>
+      <li class="nav-item"><a href="harga.html"><span class="nav-icon">🏷️</span> Harga Sampah</a></li>
+      <p class="nav-section-title">Sistem</p>
+      <li class="nav-item"><a href="pengaturan.html"><span class="nav-icon">⚙️</span> Pengaturan</a></li>
+    </nav>
+    <div class="sidebar-footer">
+      <a href="#" onclick="logout()"><span>🚪</span> Keluar</a>
+    </div>
+  </aside>
+
+  <!-- MAIN CONTENT -->
+  <div class="main-content">
+    <header class="topbar">
+      <div class="topbar-left">
+        <h1>Riwayat Transaksi</h1>
+        <p id="topbarDate">Memuat tanggal...</p>
+      </div>
+      <div class="topbar-right">
+        <button class="topbar-btn">🔔<span class="badge">3</span></button>
+        <button class="btn btn-outline btn-sm">⬇️ Export Excel</button>
+        <a href="setor.html" class="btn btn-primary">＋ Transaksi Baru</a>
+      </div>
+    </header>
+
+    <main class="page-content">
+
+      <!-- RINGKASAN -->
+      <div class="stats-grid" style="margin-bottom:24px;">
+        <div class="stat-card green">
+          <div class="stat-icon green">📋</div>
+          <div class="stat-info">
+            <h3 id="totalTrAll">8</h3>
+            <p>Total Transaksi</p>
+          </div>
+        </div>
+        <div class="stat-card yellow">
+          <div class="stat-icon yellow">✅</div>
+          <div class="stat-info">
+            <h3 id="totalTrSelesai">—</h3>
+            <p>Selesai</p>
+          </div>
+        </div>
+        <div class="stat-card blue">
+          <div class="stat-icon blue">⏳</div>
+          <div class="stat-info">
+            <h3 id="totalTrPending">—</h3>
+            <p>Pending</p>
+          </div>
+        </div>
+        <div class="stat-card red">
+          <div class="stat-icon red">❌</div>
+          <div class="stat-info">
+            <h3 id="totalTrBatal">—</h3>
+            <p>Dibatalkan</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- FILTER PANEL -->
+      <div class="card" style="margin-bottom:24px;">
+        <div class="card-title" style="margin-bottom:16px;"><span>🔍</span> Filter Transaksi</div>
+        <div class="grid-3" style="gap:16px; align-items:end;">
+          <div>
+            <label class="form-label">Cari Nasabah / ID</label>
+            <div class="search-input-wrap">
+              <span class="search-icon">🔍</span>
+              <input type="text" id="searchTr" placeholder="Cari..." oninput="applyFilter()">
+            </div>
+          </div>
+          <div>
+            <label class="form-label">Jenis Sampah</label>
+            <select class="form-control" id="filterJenisTr" onchange="applyFilter()">
+              <option value="">Semua Jenis</option>
+              <option>Plastik</option><option>Kertas</option><option>Logam</option>
+              <option>Organik</option><option>Elektronik</option><option>Kaca</option>
+            </select>
+          </div>
+          <div>
+            <label class="form-label">Status</label>
+            <select class="form-control" id="filterStatusTr" onchange="applyFilter()">
+              <option value="">Semua Status</option>
+              <option>Selesai</option><option>Pending</option><option>Dibatalkan</option>
+            </select>
+          </div>
+          <div>
+            <label class="form-label">Dari Tanggal</label>
+            <input type="date" class="form-control" id="filterDari" onchange="applyFilter()">
+          </div>
+          <div>
+            <label class="form-label">Sampai Tanggal</label>
+            <input type="date" class="form-control" id="filterSampai" onchange="applyFilter()">
+          </div>
+          <div style="display:flex; gap:8px;">
+            <button class="btn btn-primary" style="flex:1;" onclick="applyFilter()">Terapkan</button>
+            <button class="btn btn-outline" onclick="resetFilter()">Reset</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- RINGKASAN FILTER -->
+      <div id="ringkasanFilter" style="display:none; background:#e8f5e9; border-radius:10px; padding:14px 18px; margin-bottom:18px; font-size:13.5px; border-left:4px solid var(--primary-light);">
+        <strong>📊 Ringkasan hasil filter:</strong>
+        &nbsp; Total: <strong id="rfTotal">—</strong> transaksi &nbsp;|&nbsp;
+        Berat: <strong id="rfBerat">—</strong> kg &nbsp;|&nbsp;
+        Nilai: <strong id="rfNilai">—</strong>
+      </div>
+
+      <!-- TABEL -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title"><span>📋</span> Daftar Transaksi</div>
+          <div id="tableInfo" style="font-size:12px; color:var(--text-muted);"></div>
+        </div>
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Nasabah</th>
+                <th>Jenis Sampah</th>
+                <th>Berat</th>
+                <th>Harga/kg</th>
+                <th>Total</th>
+                <th>Tanggal</th>
+                <th>Status</th>
+                <th>Aksi</th>
+              </tr>
+            </thead>
+            <tbody id="transaksiTable"><!-- JS --></tbody>
+          </table>
+        </div>
+
+        <div class="pagination">
+          <div class="pagination-info" id="paginasiTr">—</div>
+          <div class="pagination-btns">
+            <button class="page-btn">‹</button>
+            <button class="page-btn active">1</button>
+            <button class="page-btn">2</button>
+            <button class="page-btn">›</button>
+          </div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<!-- MODAL DETAIL TRANSAKSI -->
+<div class="modal-overlay" id="modalDetailTr">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">🔍 Detail Transaksi</div>
+      <button class="modal-close" onclick="closeModal('modalDetailTr')">✕</button>
+    </div>
+    <div id="detailTrContent" style="font-size:14px;"></div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modalDetailTr')">Tutup</button>
+      <button class="btn btn-primary" onclick="showToast('Fitur cetak segera tersedia','warning')">🖨️ Cetak Kwitansi</button>
+    </div>
+  </div>
+</div>
+
+<script src="../js/app.js"></script>
+<script>
+  const iconsT = { Plastik:'🧴', Kertas:'📰', Logam:'🔩', Organik:'🌿', Elektronik:'📱', Kaca:'🍶' };
+  const scT    = { Selesai:'success', Pending:'warning', Dibatalkan:'danger' };
+  let filteredTr = [...sampleTransaksi];
+
+  function renderTransaksi(data) {
+    const tbody = document.getElementById('transaksiTable');
+    tbody.innerHTML = '';
+
+    // Update stats
+    document.getElementById('totalTrAll').textContent     = sampleTransaksi.length;
+    document.getElementById('totalTrSelesai').textContent = sampleTransaksi.filter(t=>t.status==='Selesai').length;
+    document.getElementById('totalTrPending').textContent = sampleTransaksi.filter(t=>t.status==='Pending').length;
+    document.getElementById('totalTrBatal').textContent   = sampleTransaksi.filter(t=>t.status==='Dibatalkan').length;
+
+    if (data.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="9" style="text-align:center; padding:50px; color:var(--text-muted);">
+        <div style="font-size:48px; margin-bottom:10px;">📭</div>
+        <div>Tidak ada transaksi yang sesuai filter</div>
+      </td></tr>`;
+      return;
+    }
+
+    data.forEach((t, idx) => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td><strong>${t.id}</strong></td>
+        <td>${t.nasabah}</td>
+        <td><span class="trash-tag ${t.jenis.toLowerCase()}">${iconsT[t.jenis]||'♻️'} ${t.jenis}</span></td>
+        <td><strong>${t.berat} kg</strong></td>
+        <td>Rp ${Number(t.harga).toLocaleString('id-ID')}</td>
+        <td><strong style="color:var(--primary);">${formatRupiah(t.total)}</strong></td>
+        <td>${formatDate(t.tanggal)}</td>
+        <td><span class="badge-status ${scT[t.status]}">● ${t.status}</span></td>
+        <td>
+          <button class="btn-icon" title="Detail" onclick="detailTr(${idx})">👁️</button>
+          ${t.status === 'Pending' ? `<button class="btn-icon" title="Konfirmasi" style="margin:0 4px;" onclick="konfirmasiTr(${idx})">✅</button>` : '<span style="width:34px;display:inline-block;"></span>'}
+          <button class="btn-icon" title="Hapus" onclick="hapusTr(${idx})">🗑️</button>
+        </td>
+      `;
+      tbody.appendChild(tr);
+    });
+
+    document.getElementById('paginasiTr').textContent = `Menampilkan ${data.length} dari ${sampleTransaksi.length} transaksi`;
+    document.getElementById('tableInfo').textContent  = `${data.length} hasil ditemukan`;
+  }
+
+  function applyFilter() {
+    const q      = document.getElementById('searchTr').value.toLowerCase();
+    const jenis  = document.getElementById('filterJenisTr').value;
+    const status = document.getElementById('filterStatusTr').value;
+    const dari   = document.getElementById('filterDari').value;
+    const sampai = document.getElementById('filterSampai').value;
+
+    filteredTr = sampleTransaksi.filter(t =>
+      (t.nasabah.toLowerCase().includes(q) || t.id.toLowerCase().includes(q)) &&
+      (!jenis  || t.jenis  === jenis) &&
+      (!status || t.status === status) &&
+      (!dari   || t.tanggal >= dari) &&
+      (!sampai || t.tanggal <= sampai)
+    );
+
+    renderTransaksi(filteredTr);
+
+    // Ringkasan filter
+    const ring = document.getElementById('ringkasanFilter');
+    if (q || jenis || status || dari || sampai) {
+      const totalBerat = filteredTr.reduce((s, t) => s + t.berat, 0);
+      const totalNilai = filteredTr.reduce((s, t) => s + t.total, 0);
+      ring.style.display = 'block';
+      document.getElementById('rfTotal').textContent = filteredTr.length;
+      document.getElementById('rfBerat').textContent = totalBerat.toFixed(1);
+      document.getElementById('rfNilai').textContent = formatRupiah(totalNilai);
+    } else {
+      ring.style.display = 'none';
+    }
+  }
+
+  function resetFilter() {
+    document.getElementById('searchTr').value         = '';
+    document.getElementById('filterJenisTr').value    = '';
+    document.getElementById('filterStatusTr').value   = '';
+    document.getElementById('filterDari').value       = '';
+    document.getElementById('filterSampai').value     = '';
+    filteredTr = [...sampleTransaksi];
+    renderTransaksi(filteredTr);
+    document.getElementById('ringkasanFilter').style.display = 'none';
+  }
+
+  function detailTr(idx) {
+    const t = filteredTr[idx];
+    document.getElementById('detailTrContent').innerHTML = `
+      <div style="text-align:center; margin-bottom:18px; padding:14px; background:#f1f8e9; border-radius:10px;">
+        <div style="font-size:40px;">${iconsT[t.jenis]||'♻️'}</div>
+        <h3 style="margin-top:6px;">${t.jenis}</h3>
+        <div style="font-size:22px; font-weight:700; color:var(--primary); margin-top:4px;">${formatRupiah(t.total)}</div>
+      </div>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px 20px; font-size:13.5px;">
+        <div><span style="color:var(--text-muted); font-size:11px;">ID TRANSAKSI</span><br><strong>${t.id}</strong></div>
+        <div><span style="color:var(--text-muted); font-size:11px;">STATUS</span><br><span class="badge-status ${scT[t.status]}">● ${t.status}</span></div>
+        <div><span style="color:var(--text-muted); font-size:11px;">NASABAH</span><br><strong>${t.nasabah}</strong></div>
+        <div><span style="color:var(--text-muted); font-size:11px;">TANGGAL</span><br><strong>${formatDate(t.tanggal)}</strong></div>
+        <div><span style="color:var(--text-muted); font-size:11px;">BERAT</span><br><strong>${t.berat} kg</strong></div>
+        <div><span style="color:var(--text-muted); font-size:11px;">HARGA/KG</span><br><strong>${formatRupiah(t.harga)}</strong></div>
+      </div>
+    `;
+    openModal('modalDetailTr');
+  }
+
+  function konfirmasiTr(idx) {
+    confirmAction('Konfirmasi transaksi ini sebagai Selesai?', () => {
+      filteredTr[idx].status = 'Selesai';
+      const orig = sampleTransaksi.find(t => t.id === filteredTr[idx].id);
+      if (orig) orig.status = 'Selesai';
+      renderTransaksi(filteredTr);
+      showToast('Transaksi dikonfirmasi!', 'success');
+    });
+  }
+
+  function hapusTr(idx) {
+    confirmAction('Hapus transaksi ini?', () => {
+      const id = filteredTr[idx].id;
+      const i = sampleTransaksi.findIndex(t => t.id === id);
+      if (i !== -1) sampleTransaksi.splice(i, 1);
+      filteredTr.splice(idx, 1);
+      renderTransaksi(filteredTr);
+      showToast('Transaksi dihapus', 'warning');
+    });
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    renderTransaksi(sampleTransaksi);
+  });
+</script>
+
+</body>
+</html>

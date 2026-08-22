@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Laporan — Bank Sampah Hijau Lestari</title>
+  <link rel="stylesheet" href="../css/style.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>♻️</text></svg>">
+</head>
+<body>
+<div class="app-layout">
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-logo">
+        <div class="logo-icon">♻️</div>
+        <div class="logo-text"><h2>Bank Sampah</h2><span>Hijau Lestari</span></div>
+      </div>
+    </div>
+    <div class="sidebar-user">
+      <div class="user-avatar">👤</div>
+      <div class="user-info"><h4 id="sidebarUserName">Loading...</h4><span id="sidebarUserRole">—</span></div>
+    </div>
+    <nav class="sidebar-nav">
+      <p class="nav-section-title">Menu Utama</p>
+      <li class="nav-item"><a href="dashboard.html"><span class="nav-icon">🏠</span> Dashboard</a></li>
+      <li class="nav-item"><a href="setor.html"><span class="nav-icon">📦</span> Setor Sampah</a></li>
+      <li class="nav-item"><a href="nasabah.html"><span class="nav-icon">👥</span> Data Nasabah</a></li>
+      <li class="nav-item"><a href="transaksi.html"><span class="nav-icon">📋</span> Riwayat Transaksi</a></li>
+      <p class="nav-section-title">Keuangan</p>
+      <li class="nav-item"><a href="tabungan.html"><span class="nav-icon">💰</span> Tabungan</a></li>
+      <li class="nav-item"><a href="penarikan.html"><span class="nav-icon">🏧</span> Penarikan</a></li>
+      <p class="nav-section-title">Laporan</p>
+      <li class="nav-item active"><a href="laporan.html"><span class="nav-icon">📊</span> Laporan</a></li>
+      <li class="nav-item"><a href="harga.html"><span class="nav-icon">🏷️</span> Harga Sampah</a></li>
+      <p class="nav-section-title">Sistem</p>
+      <li class="nav-item"><a href="pengaturan.html"><span class="nav-icon">⚙️</span> Pengaturan</a></li>
+    </nav>
+    <div class="sidebar-footer">
+      <a href="#" onclick="logout()"><span>🚪</span> Keluar</a>
+    </div>
+  </aside>
+
+  <div class="main-content">
+    <header class="topbar">
+      <div class="topbar-left"><h1>Laporan</h1><p id="topbarDate">Memuat tanggal...</p></div>
+      <div class="topbar-right">
+        <button class="topbar-btn">🔔<span class="badge">3</span></button>
+        <button class="btn btn-primary" onclick="showToast('Laporan sedang dicetak...','success')">🖨️ Cetak Laporan</button>
+      </div>
+    </header>
+
+    <main class="page-content">
+
+      <!-- PERIODE -->
+      <div class="card" style="margin-bottom:24px;">
+        <div class="card-title" style="margin-bottom:14px;"><span>📅</span> Pilih Periode Laporan</div>
+        <div style="display:flex; gap:16px; align-items:flex-end; flex-wrap:wrap;">
+          <div>
+            <label class="form-label">Tipe Laporan</label>
+            <select class="form-control" style="width:180px;" id="tipeLaporan">
+              <option>Bulanan</option><option>Mingguan</option><option>Tahunan</option>
+            </select>
+          </div>
+          <div>
+            <label class="form-label">Bulan</label>
+            <select class="form-control" style="width:150px;" id="bulanLaporan">
+              <option>Januari</option><option>Februari</option><option>Maret</option>
+              <option>April</option><option>Mei</option><option>Juni</option>
+              <option>Juli</option><option selected>Agustus</option><option>September</option>
+              <option>Oktober</option><option>November</option><option>Desember</option>
+            </select>
+          </div>
+          <div>
+            <label class="form-label">Tahun</label>
+            <select class="form-control" style="width:110px;" id="tahunLaporan">
+              <option>2026</option><option>2025</option><option>2024</option>
+            </select>
+          </div>
+          <button class="btn btn-primary">🔄 Tampilkan</button>
+        </div>
+      </div>
+
+      <!-- KPI CARDS -->
+      <div class="stats-grid" style="margin-bottom:24px;">
+        <div class="stat-card green">
+          <div class="stat-icon green">♻️</div>
+          <div class="stat-info"><h3>1.240 kg</h3><p>Total Sampah Masuk</p><div class="stat-change up">↑ 12%</div></div>
+        </div>
+        <div class="stat-card yellow">
+          <div class="stat-icon yellow">💰</div>
+          <div class="stat-info"><h3>Rp 3,72 jt</h3><p>Total Pendapatan</p><div class="stat-change up">↑ 8%</div></div>
+        </div>
+        <div class="stat-card blue">
+          <div class="stat-icon blue">📦</div>
+          <div class="stat-info"><h3>312</h3><p>Total Transaksi</p><div class="stat-change up">↑ 23</div></div>
+        </div>
+        <div class="stat-card red">
+          <div class="stat-icon red">🌱</div>
+          <div class="stat-info"><h3>320 kg</h3><p>CO₂ Berkurang</p><div class="stat-change up">↑ 10%</div></div>
+        </div>
+      </div>
+
+      <!-- GRAFIK & PIE -->
+      <div class="two-col" style="margin-bottom:24px;">
+        <div class="card">
+          <div class="card-title" style="margin-bottom:16px;"><span>📊</span> Grafik Setoran Per Minggu (Agustus 2026)</div>
+          <div class="chart-container chart-axis" id="weekChart"></div>
+        </div>
+        <div class="card">
+          <div class="card-title" style="margin-bottom:16px;"><span>🥧</span> Komposisi Jenis Sampah</div>
+          <div style="display:flex; flex-direction:column; gap:12px; margin-top:8px;">
+            <div>
+              <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px;">
+                <span>🧴 Plastik</span><strong>38.7% · 480 kg</strong>
+              </div>
+              <div class="progress-bar" style="height:10px;">
+                <div class="progress-fill" style="width:38.7%;background:linear-gradient(90deg,#1565c0,#1976d2);"></div>
+              </div>
+            </div>
+            <div>
+              <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px;">
+                <span>🌿 Organik</span><strong>25.8% · 320 kg</strong>
+              </div>
+              <div class="progress-bar" style="height:10px;">
+                <div class="progress-fill" style="width:25.8%;background:linear-gradient(90deg,#2e7d32,#388e3c);"></div>
+              </div>
+            </div>
+            <div>
+              <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px;">
+                <span>📰 Kertas</span><strong>16.9% · 210 kg</strong>
+              </div>
+              <div class="progress-bar" style="height:10px;">
+                <div class="progress-fill" style="width:16.9%;background:linear-gradient(90deg,#e65100,#f57c00);"></div>
+              </div>
+            </div>
+            <div>
+              <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px;">
+                <span>🍶 Kaca</span><strong>8.1% · 100 kg</strong>
+              </div>
+              <div class="progress-bar" style="height:10px;">
+                <div class="progress-fill" style="width:8.1%;background:linear-gradient(90deg,#006064,#00838f);"></div>
+              </div>
+            </div>
+            <div>
+              <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px;">
+                <span>🔩 Logam</span><strong>7.7% · 95 kg</strong>
+              </div>
+              <div class="progress-bar" style="height:10px;">
+                <div class="progress-fill" style="width:7.7%;background:linear-gradient(90deg,#880e4f,#ad1457);"></div>
+              </div>
+            </div>
+            <div>
+              <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px;">
+                <span>📱 Elektronik</span><strong>2.8% · 35 kg</strong>
+              </div>
+              <div class="progress-bar" style="height:10px;">
+                <div class="progress-fill" style="width:2.8%;background:linear-gradient(90deg,#4a148c,#6a1b9a);"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TOP NASABAH -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title"><span>🏆</span> Top 5 Nasabah Setoran Terbanyak</div>
+          <span style="font-size:12px;color:var(--text-muted);">Agustus 2026</span>
+        </div>
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr><th>Rank</th><th>Nama Nasabah</th><th>Jumlah Setoran</th><th>Total Berat</th><th>Total Nilai</th><th>Poin</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><span style="background:#ffd700;color:#333;padding:3px 10px;border-radius:20px;font-weight:700;font-size:12px;">🥇 1</span></td>
+                <td>Dewi Kusuma</td><td>18 kali</td><td>84.5 kg</td>
+                <td><strong style="color:var(--primary);">Rp 420.000</strong></td><td>⭐ 420</td>
+              </tr>
+              <tr>
+                <td><span style="background:#c0c0c0;color:#333;padding:3px 10px;border-radius:20px;font-weight:700;font-size:12px;">🥈 2</span></td>
+                <td>Hendra Wijaya</td><td>14 kali</td><td>72.0 kg</td>
+                <td><strong style="color:var(--primary);">Rp 330.000</strong></td><td>⭐ 330</td>
+              </tr>
+              <tr>
+                <td><span style="background:#cd7f32;color:#fff;padding:3px 10px;border-radius:20px;font-weight:700;font-size:12px;">🥉 3</span></td>
+                <td>Siti Rahayu</td><td>12 kali</td><td>56.5 kg</td>
+                <td><strong style="color:var(--primary);">Rp 290.000</strong></td><td>⭐ 290</td>
+              </tr>
+              <tr>
+                <td><span style="background:#f5f5f5;color:#333;padding:3px 10px;border-radius:20px;font-weight:700;font-size:12px;">4</span></td>
+                <td>Budi Santoso</td><td>8 kali</td><td>38.0 kg</td>
+                <td><strong style="color:var(--primary);">Rp 175.000</strong></td><td>⭐ 175</td>
+              </tr>
+              <tr>
+                <td><span style="background:#f5f5f5;color:#333;padding:3px 10px;border-radius:20px;font-weight:700;font-size:12px;">5</span></td>
+                <td>Maya Sari</td><td>5 kali</td><td>22.0 kg</td>
+                <td><strong style="color:var(--primary);">Rp 108.000</strong></td><td>⭐ 108</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<script src="../js/app.js"></script>
+<script>
+  // Weekly chart
+  const weekData = [
+    { label: 'Mgg 1', kg: 298 }, { label: 'Mgg 2', kg: 312 },
+    { label: 'Mgg 3', kg: 345 }, { label: 'Mgg 4', kg: 285 },
+  ];
+  const maxW = Math.max(...weekData.map(d => d.kg));
+  const wChart = document.getElementById('weekChart');
+  weekData.forEach(d => {
+    const bar = document.createElement('div');
+    bar.className = 'chart-bar';
+    bar.style.height = (d.kg / maxW * 100) + '%';
+    bar.style.background = 'linear-gradient(180deg, #f9a825, #ffd54f)';
+    bar.innerHTML = `<span class="bar-value">${d.kg}kg</span><span class="bar-label">${d.label}</span>`;
+    wChart.appendChild(bar);
+  });
+</script>
+</body>
+</html>

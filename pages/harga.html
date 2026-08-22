@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Harga Sampah — Bank Sampah Hijau Lestari</title>
+  <link rel="stylesheet" href="../css/style.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>♻️</text></svg>">
+</head>
+<body>
+<div class="app-layout">
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-logo">
+        <div class="logo-icon">♻️</div>
+        <div class="logo-text"><h2>Bank Sampah</h2><span>Hijau Lestari</span></div>
+      </div>
+    </div>
+    <div class="sidebar-user">
+      <div class="user-avatar">👤</div>
+      <div class="user-info"><h4 id="sidebarUserName">Loading...</h4><span id="sidebarUserRole">—</span></div>
+    </div>
+    <nav class="sidebar-nav">
+      <p class="nav-section-title">Menu Utama</p>
+      <li class="nav-item"><a href="dashboard.html"><span class="nav-icon">🏠</span> Dashboard</a></li>
+      <li class="nav-item"><a href="setor.html"><span class="nav-icon">📦</span> Setor Sampah</a></li>
+      <li class="nav-item"><a href="nasabah.html"><span class="nav-icon">👥</span> Data Nasabah</a></li>
+      <li class="nav-item"><a href="transaksi.html"><span class="nav-icon">📋</span> Riwayat Transaksi</a></li>
+      <p class="nav-section-title">Keuangan</p>
+      <li class="nav-item"><a href="tabungan.html"><span class="nav-icon">💰</span> Tabungan</a></li>
+      <li class="nav-item"><a href="penarikan.html"><span class="nav-icon">🏧</span> Penarikan</a></li>
+      <p class="nav-section-title">Laporan</p>
+      <li class="nav-item"><a href="laporan.html"><span class="nav-icon">📊</span> Laporan</a></li>
+      <li class="nav-item active"><a href="harga.html"><span class="nav-icon">🏷️</span> Harga Sampah</a></li>
+      <p class="nav-section-title">Sistem</p>
+      <li class="nav-item"><a href="pengaturan.html"><span class="nav-icon">⚙️</span> Pengaturan</a></li>
+    </nav>
+    <div class="sidebar-footer">
+      <a href="#" onclick="logout()"><span>🚪</span> Keluar</a>
+    </div>
+  </aside>
+
+  <div class="main-content">
+    <header class="topbar">
+      <div class="topbar-left"><h1>Harga Sampah</h1><p id="topbarDate">Memuat tanggal...</p></div>
+      <div class="topbar-right">
+        <button class="topbar-btn">🔔<span class="badge">3</span></button>
+        <button class="btn btn-primary" onclick="openModal('modalTambahHarga')">＋ Tambah Kategori</button>
+      </div>
+    </header>
+
+    <main class="page-content">
+
+      <div style="background:#fff8e1;border-left:4px solid var(--secondary);border-radius:10px;padding:14px 18px;margin-bottom:24px;font-size:13.5px;">
+        ⚠️ <strong>Perhatian:</strong> Perubahan harga akan berlaku untuk transaksi baru. Transaksi yang sudah ada tidak terpengaruh.
+      </div>
+
+      <!-- KARTU HARGA -->
+      <div class="grid-3" id="hargaGrid" style="margin-bottom:24px;"></div>
+
+      <!-- TABEL HARGA -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title"><span>🏷️</span> Daftar Harga Lengkap</div>
+          <div style="font-size:12px;color:var(--text-muted);">Terakhir diperbarui: 1 Agustus 2026</div>
+        </div>
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr><th>Jenis Sampah</th><th>Kategori</th><th>Harga/kg</th><th>Poin/kg</th><th>Status</th><th>Aksi</th></tr>
+            </thead>
+            <tbody id="hargaTable"></tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<!-- MODAL EDIT HARGA -->
+<div class="modal-overlay" id="modalEditHarga">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="editHargaTitle">✏️ Edit Harga</div>
+      <button class="modal-close" onclick="closeModal('modalEditHarga')">✕</button>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Jenis Sampah</label>
+      <input type="text" class="form-control" id="editJenis" readonly style="background:#f5f5f5;">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Harga per kg (Rp)</label>
+      <div class="input-group">
+        <span class="input-icon">💰</span>
+        <input type="number" class="form-control" id="editHarga" min="0" step="100">
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Poin per kg</label>
+      <div class="input-group">
+        <span class="input-icon">⭐</span>
+        <input type="number" class="form-control" id="editPoin" min="0">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modalEditHarga')">Batal</button>
+      <button class="btn btn-primary" onclick="simpanHarga()">💾 Simpan</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modalTambahHarga">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">➕ Tambah Kategori Sampah</div>
+      <button class="modal-close" onclick="closeModal('modalTambahHarga')">✕</button>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Nama Jenis Sampah</label>
+      <input type="text" class="form-control" id="newJenis" placeholder="cth: Baterai">
+    </div>
+    <div class="grid-2">
+      <div class="form-group">
+        <label class="form-label">Harga/kg (Rp)</label>
+        <input type="number" class="form-control" id="newHarga" placeholder="0">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Poin/kg</label>
+        <input type="number" class="form-control" id="newPoin" placeholder="0">
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Ikon (emoji)</label>
+      <input type="text" class="form-control" id="newIkon" placeholder="🔋" maxlength="4">
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modalTambahHarga')">Batal</button>
+      <button class="btn btn-primary" onclick="tambahKategori()">➕ Tambah</button>
+    </div>
+  </div>
+</div>
+
+<script src="../js/app.js"></script>
+<script>
+  let daftarHarga = [
+    { jenis:'Plastik',    ikon:'🧴', kategori:'Anorganik', harga:2500,  poin:2, aktif:true  },
+    { jenis:'Kertas',     ikon:'📰', kategori:'Anorganik', harga:1500,  poin:1, aktif:true  },
+    { jenis:'Logam',      ikon:'🔩', kategori:'Anorganik', harga:8000,  poin:5, aktif:true  },
+    { jenis:'Organik',    ikon:'🌿', kategori:'Organik',   harga:500,   poin:1, aktif:true  },
+    { jenis:'Elektronik', ikon:'📱', kategori:'Khusus',    harga:15000, poin:8, aktif:true  },
+    { jenis:'Kaca',       ikon:'🍶', kategori:'Anorganik', harga:1000,  poin:1, aktif:true  },
+  ];
+  let editingHargaIdx = null;
+
+  function renderHarga() {
+    // Grid cards
+    const grid = document.getElementById('hargaGrid');
+    grid.innerHTML = '';
+    daftarHarga.forEach((h, idx) => {
+      const card = document.createElement('div');
+      card.className = 'card';
+      card.style.textAlign = 'center';
+      card.innerHTML = `
+        <div style="font-size:42px;margin-bottom:8px;">${h.ikon}</div>
+        <div style="font-weight:700;font-size:17px;">${h.jenis}</div>
+        <div style="font-size:22px;font-weight:700;color:var(--primary);margin:10px 0;">${formatRupiah(h.harga)}<span style="font-size:13px;font-weight:400;color:var(--text-muted);">/kg</span></div>
+        <div style="font-size:12px;color:var(--text-muted);margin-bottom:10px;">⭐ ${h.poin} poin/kg</div>
+        <span class="badge-status ${h.aktif?'success':'danger'}" style="margin-bottom:12px;">● ${h.aktif?'Aktif':'Nonaktif'}</span>
+        <div><button class="btn btn-sm btn-outline" onclick="editHarga(${idx})">✏️ Edit Harga</button></div>
+      `;
+      grid.appendChild(card);
+    });
+
+    // Table
+    const tbody = document.getElementById('hargaTable');
+    tbody.innerHTML = '';
+    daftarHarga.forEach((h, idx) => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td><strong>${h.ikon} ${h.jenis}</strong></td>
+        <td><span style="background:#e8f5e9;color:#2e7d32;padding:3px 10px;border-radius:20px;font-size:12px;">${h.kategori}</span></td>
+        <td><strong style="color:var(--primary);">${formatRupiah(h.harga)}</strong></td>
+        <td>⭐ ${h.poin}</td>
+        <td><span class="badge-status ${h.aktif?'success':'danger'}">● ${h.aktif?'Aktif':'Nonaktif'}</span></td>
+        <td>
+          <button class="btn-icon" onclick="editHarga(${idx})">✏️</button>
+          <button class="btn-icon" style="margin-left:4px;" onclick="toggleAktif(${idx})">${h.aktif?'🚫':'✅'}</button>
+        </td>
+      `;
+      tbody.appendChild(tr);
+    });
+  }
+
+  function editHarga(idx) {
+    editingHargaIdx = idx;
+    const h = daftarHarga[idx];
+    document.getElementById('editHargaTitle').textContent = `✏️ Edit Harga — ${h.jenis}`;
+    document.getElementById('editJenis').value = h.jenis;
+    document.getElementById('editHarga').value = h.harga;
+    document.getElementById('editPoin').value  = h.poin;
+    openModal('modalEditHarga');
+  }
+
+  function simpanHarga() {
+    if (editingHargaIdx === null) return;
+    daftarHarga[editingHargaIdx].harga = parseInt(document.getElementById('editHarga').value) || 0;
+    daftarHarga[editingHargaIdx].poin  = parseInt(document.getElementById('editPoin').value) || 0;
+    hargaSampah[daftarHarga[editingHargaIdx].jenis] = daftarHarga[editingHargaIdx].harga;
+    closeModal('modalEditHarga');
+    renderHarga();
+    showToast('Harga berhasil diperbarui!', 'success');
+  }
+
+  function toggleAktif(idx) {
+    daftarHarga[idx].aktif = !daftarHarga[idx].aktif;
+    renderHarga();
+    showToast(`${daftarHarga[idx].jenis} ${daftarHarga[idx].aktif?'diaktifkan':'dinonaktifkan'}`, 'warning');
+  }
+
+  function tambahKategori() {
+    const jenis = document.getElementById('newJenis').value.trim();
+    const harga = parseInt(document.getElementById('newHarga').value) || 0;
+    const poin  = parseInt(document.getElementById('newPoin').value) || 0;
+    const ikon  = document.getElementById('newIkon').value || '♻️';
+    if (!jenis) { showToast('Nama jenis sampah wajib diisi!', 'danger'); return; }
+    daftarHarga.push({ jenis, ikon, kategori:'Anorganik', harga, poin, aktif:true });
+    hargaSampah[jenis] = harga;
+    closeModal('modalTambahHarga');
+    renderHarga();
+    showToast(`Kategori ${jenis} berhasil ditambahkan!`, 'success');
+  }
+
+  document.addEventListener('DOMContentLoaded', renderHarga);
+</script>
+</body>
+</html>

@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Penarikan — Bank Sampah Hijau Lestari</title>
+  <link rel="stylesheet" href="../css/style.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>♻️</text></svg>">
+</head>
+<body>
+<div class="app-layout">
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-logo">
+        <div class="logo-icon">♻️</div>
+        <div class="logo-text"><h2>Bank Sampah</h2><span>Hijau Lestari</span></div>
+      </div>
+    </div>
+    <div class="sidebar-user">
+      <div class="user-avatar">👤</div>
+      <div class="user-info"><h4 id="sidebarUserName">Loading...</h4><span id="sidebarUserRole">—</span></div>
+    </div>
+    <nav class="sidebar-nav">
+      <p class="nav-section-title">Menu Utama</p>
+      <li class="nav-item"><a href="dashboard.html"><span class="nav-icon">🏠</span> Dashboard</a></li>
+      <li class="nav-item"><a href="setor.html"><span class="nav-icon">📦</span> Setor Sampah</a></li>
+      <li class="nav-item"><a href="nasabah.html"><span class="nav-icon">👥</span> Data Nasabah</a></li>
+      <li class="nav-item"><a href="transaksi.html"><span class="nav-icon">📋</span> Riwayat Transaksi</a></li>
+      <p class="nav-section-title">Keuangan</p>
+      <li class="nav-item"><a href="tabungan.html"><span class="nav-icon">💰</span> Tabungan</a></li>
+      <li class="nav-item active"><a href="penarikan.html"><span class="nav-icon">🏧</span> Penarikan</a></li>
+      <p class="nav-section-title">Laporan</p>
+      <li class="nav-item"><a href="laporan.html"><span class="nav-icon">📊</span> Laporan</a></li>
+      <li class="nav-item"><a href="harga.html"><span class="nav-icon">🏷️</span> Harga Sampah</a></li>
+      <p class="nav-section-title">Sistem</p>
+      <li class="nav-item"><a href="pengaturan.html"><span class="nav-icon">⚙️</span> Pengaturan</a></li>
+    </nav>
+    <div class="sidebar-footer">
+      <a href="#" onclick="logout()"><span>🚪</span> Keluar</a>
+    </div>
+  </aside>
+
+  <div class="main-content">
+    <header class="topbar">
+      <div class="topbar-left"><h1>Penarikan Tabungan</h1><p id="topbarDate">Memuat tanggal...</p></div>
+      <div class="topbar-right">
+        <button class="topbar-btn">🔔<span class="badge">3</span></button>
+        <button class="btn btn-primary" onclick="openModal('modalPenarikan')">＋ Proses Penarikan</button>
+      </div>
+    </header>
+
+    <main class="page-content">
+      <div class="grid-3" style="margin-bottom:24px;">
+        <div class="stat-card yellow">
+          <div class="stat-icon yellow">🏧</div>
+          <div class="stat-info"><h3>Rp 1,20 jt</h3><p>Penarikan Bulan Ini</p></div>
+        </div>
+        <div class="stat-card blue">
+          <div class="stat-icon blue">📋</div>
+          <div class="stat-info"><h3>12</h3><p>Jumlah Transaksi Tarik</p></div>
+        </div>
+        <div class="stat-card green">
+          <div class="stat-icon green">⏳</div>
+          <div class="stat-info"><h3>2</h3><p>Permintaan Pending</p></div>
+        </div>
+      </div>
+
+      <!-- FORM PENARIKAN -->
+      <div class="two-col">
+        <div class="card">
+          <div class="card-title" style="margin-bottom:20px;"><span>🏧</span> Form Penarikan</div>
+          <div class="form-group">
+            <label class="form-label">Pilih Nasabah</label>
+            <select class="form-control" id="pilihNasabahTarik" onchange="updateSaldoInfo()">
+              <option value="">— Pilih Nasabah —</option>
+            </select>
+          </div>
+          <div id="infoPenarikan" style="display:none; background:#e8f5e9; padding:14px 16px; border-radius:8px; margin-bottom:16px; border-left:3px solid var(--primary);">
+            <div style="font-size:13px; margin-bottom:4px;">Saldo Tersedia</div>
+            <div style="font-size:22px; font-weight:700; color:var(--primary);" id="saldoTersedia">—</div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Jumlah Penarikan (Rp)</label>
+            <div class="input-group">
+              <span class="input-icon">💵</span>
+              <input type="number" class="form-control" id="jumlahTarik" placeholder="0" min="0" step="1000" oninput="cekSaldo()">
+            </div>
+          </div>
+          <div id="warningTarik" style="display:none; background:#ffebee; border-left:3px solid var(--danger); padding:10px 14px; border-radius:8px; margin-bottom:12px; font-size:13px; color:var(--danger);">
+            ⚠️ Jumlah melebihi saldo tersedia!
+          </div>
+          <div class="form-group">
+            <label class="form-label">Metode Pembayaran</label>
+            <select class="form-control" id="metodeTarik">
+              <option>Tunai</option>
+              <option>Transfer Bank</option>
+              <option>Dompet Digital</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Catatan</label>
+            <textarea class="form-control" id="catatanTarik" rows="2" placeholder="Catatan penarikan..."></textarea>
+          </div>
+          <button class="btn btn-primary" style="width:100%;" onclick="prosesPenarikan()">💸 Proses Penarikan</button>
+        </div>
+
+        <!-- RIWAYAT PENARIKAN -->
+        <div class="card">
+          <div class="card-title" style="margin-bottom:16px;"><span>📋</span> Riwayat Penarikan</div>
+          <div id="riwayatPenarikan">
+            <!-- placeholder items -->
+            <div style="border-bottom:1px solid var(--border); padding:12px 0;">
+              <div style="display:flex; justify-content:space-between; font-size:13.5px;">
+                <div>
+                  <strong>Dewi Kusuma</strong>
+                  <div style="font-size:12px; color:var(--text-muted);">Tunai · 19 Ags 2026</div>
+                </div>
+                <div style="text-align:right;">
+                  <strong style="color:var(--danger);">-Rp 50.000</strong>
+                  <div><span class="badge-status success" style="font-size:10px;">● Selesai</span></div>
+                </div>
+              </div>
+            </div>
+            <div style="border-bottom:1px solid var(--border); padding:12px 0;">
+              <div style="display:flex; justify-content:space-between; font-size:13.5px;">
+                <div>
+                  <strong>Hendra Wijaya</strong>
+                  <div style="font-size:12px; color:var(--text-muted);">Transfer Bank · 18 Ags 2026</div>
+                </div>
+                <div style="text-align:right;">
+                  <strong style="color:var(--danger);">-Rp 100.000</strong>
+                  <div><span class="badge-status success" style="font-size:10px;">● Selesai</span></div>
+                </div>
+              </div>
+            </div>
+            <div style="border-bottom:1px solid var(--border); padding:12px 0;">
+              <div style="display:flex; justify-content:space-between; font-size:13.5px;">
+                <div>
+                  <strong>Siti Rahayu</strong>
+                  <div style="font-size:12px; color:var(--text-muted);">Tunai · 15 Ags 2026</div>
+                </div>
+                <div style="text-align:right;">
+                  <strong style="color:var(--danger);">-Rp 75.000</strong>
+                  <div><span class="badge-status warning" style="font-size:10px;">● Pending</span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<script src="../js/app.js"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const sel = document.getElementById('pilihNasabahTarik');
+    sampleNasabah.forEach(n => {
+      if (n.saldo > 0) {
+        const opt = document.createElement('option');
+        opt.value = n.id;
+        opt.textContent = `${n.id} — ${n.nama} (${formatRupiah(n.saldo)})`;
+        sel.appendChild(opt);
+      }
+    });
+  });
+
+  function updateSaldoInfo() {
+    const id = document.getElementById('pilihNasabahTarik').value;
+    const info = document.getElementById('infoPenarikan');
+    if (!id) { info.style.display = 'none'; return; }
+    const n = sampleNasabah.find(x => x.id === id);
+    if (n) {
+      info.style.display = 'block';
+      document.getElementById('saldoTersedia').textContent = formatRupiah(n.saldo);
+    }
+  }
+
+  function cekSaldo() {
+    const id     = document.getElementById('pilihNasabahTarik').value;
+    const jumlah = parseInt(document.getElementById('jumlahTarik').value) || 0;
+    const warn   = document.getElementById('warningTarik');
+    if (!id) { warn.style.display = 'none'; return; }
+    const n = sampleNasabah.find(x => x.id === id);
+    warn.style.display = (n && jumlah > n.saldo) ? 'block' : 'none';
+  }
+
+  function prosesPenarikan() {
+    const id     = document.getElementById('pilihNasabahTarik').value;
+    const jumlah = parseInt(document.getElementById('jumlahTarik').value) || 0;
+    const metode = document.getElementById('metodeTarik').value;
+    if (!id) { showToast('Pilih nasabah terlebih dahulu!', 'danger'); return; }
+    if (!jumlah || jumlah < 1000) { showToast('Jumlah penarikan minimal Rp 1.000!', 'danger'); return; }
+    const n = sampleNasabah.find(x => x.id === id);
+    if (jumlah > n.saldo) { showToast('Saldo tidak mencukupi!', 'danger'); return; }
+    n.saldo -= jumlah;
+    showToast(`Penarikan ${formatRupiah(jumlah)} untuk ${n.nama} berhasil!`, 'success');
+    document.getElementById('pilihNasabahTarik').value = '';
+    document.getElementById('jumlahTarik').value = '';
+    document.getElementById('infoPenarikan').style.display = 'none';
+  }
+</script>
+</body>
+</html>

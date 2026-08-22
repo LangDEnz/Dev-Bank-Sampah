@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Data Nasabah — Bank Sampah Hijau Lestari</title>
+  <link rel="stylesheet" href="../css/style.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>♻️</text></svg>">
+</head>
+<body>
+
+<div class="app-layout">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-logo">
+        <div class="logo-icon">♻️</div>
+        <div class="logo-text">
+          <h2>Bank Sampah</h2>
+          <span>Hijau Lestari</span>
+        </div>
+      </div>
+    </div>
+    <div class="sidebar-user">
+      <div class="user-avatar">👤</div>
+      <div class="user-info">
+        <h4 id="sidebarUserName">Loading...</h4>
+        <span id="sidebarUserRole">—</span>
+      </div>
+    </div>
+    <nav class="sidebar-nav">
+      <p class="nav-section-title">Menu Utama</p>
+      <li class="nav-item"><a href="dashboard.html"><span class="nav-icon">🏠</span> Dashboard</a></li>
+      <li class="nav-item"><a href="setor.html"><span class="nav-icon">📦</span> Setor Sampah</a></li>
+      <li class="nav-item active"><a href="nasabah.html"><span class="nav-icon">👥</span> Data Nasabah</a></li>
+      <li class="nav-item"><a href="transaksi.html"><span class="nav-icon">📋</span> Riwayat Transaksi</a></li>
+      <p class="nav-section-title">Keuangan</p>
+      <li class="nav-item"><a href="tabungan.html"><span class="nav-icon">💰</span> Tabungan</a></li>
+      <li class="nav-item"><a href="penarikan.html"><span class="nav-icon">🏧</span> Penarikan</a></li>
+      <p class="nav-section-title">Laporan</p>
+      <li class="nav-item"><a href="laporan.html"><span class="nav-icon">📊</span> Laporan</a></li>
+      <li class="nav-item"><a href="harga.html"><span class="nav-icon">🏷️</span> Harga Sampah</a></li>
+      <p class="nav-section-title">Sistem</p>
+      <li class="nav-item"><a href="pengaturan.html"><span class="nav-icon">⚙️</span> Pengaturan</a></li>
+    </nav>
+    <div class="sidebar-footer">
+      <a href="#" onclick="logout()"><span>🚪</span> Keluar</a>
+    </div>
+  </aside>
+
+  <!-- MAIN CONTENT -->
+  <div class="main-content">
+    <header class="topbar">
+      <div class="topbar-left">
+        <h1>Data Nasabah</h1>
+        <p id="topbarDate">Memuat tanggal...</p>
+      </div>
+      <div class="topbar-right">
+        <button class="topbar-btn">🔔<span class="badge">3</span></button>
+        <button class="btn btn-primary" onclick="openModal('modalNasabah')">＋ Tambah Nasabah</button>
+      </div>
+    </header>
+
+    <main class="page-content">
+
+      <!-- STATS -->
+      <div class="stats-grid" style="margin-bottom:24px;">
+        <div class="stat-card green">
+          <div class="stat-icon green">👥</div>
+          <div class="stat-info"><h3>247</h3><p>Total Nasabah</p></div>
+        </div>
+        <div class="stat-card yellow">
+          <div class="stat-icon yellow">✅</div>
+          <div class="stat-info"><h3>231</h3><p>Nasabah Aktif</p></div>
+        </div>
+        <div class="stat-card blue">
+          <div class="stat-icon blue">🆕</div>
+          <div class="stat-info"><h3>5</h3><p>Nasabah Baru Bulan Ini</p></div>
+        </div>
+        <div class="stat-card red">
+          <div class="stat-icon red">💤</div>
+          <div class="stat-info"><h3>16</h3><p>Tidak Aktif</p></div>
+        </div>
+      </div>
+
+      <!-- TABEL NASABAH -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title"><span>👥</span> Daftar Nasabah</div>
+          <div style="display:flex; gap:10px;">
+            <select class="form-control" style="width:auto; padding:8px 12px; font-size:13px;" id="filterStatusNasabah" onchange="applyFilterNasabah()">
+              <option value="">Semua Status</option>
+              <option>Aktif</option>
+              <option>Tidak Aktif</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="search-bar">
+          <div class="search-input-wrap">
+            <span class="search-icon">🔍</span>
+            <input type="text" id="searchNasabah" placeholder="Cari nama, ID, atau nomor telepon..." oninput="applyFilterNasabah()">
+          </div>
+          <button class="btn btn-outline btn-sm">⬇️ Export</button>
+          <button class="btn btn-primary" onclick="openModal('modalNasabah')">＋ Tambah</button>
+        </div>
+
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Nama</th>
+                <th>Telepon</th>
+                <th>Alamat</th>
+                <th>Saldo Tabungan</th>
+                <th>Poin</th>
+                <th>Status</th>
+                <th>Aksi</th>
+              </tr>
+            </thead>
+            <tbody id="nasabahTable"><!-- JS --></tbody>
+          </table>
+        </div>
+
+        <div class="pagination">
+          <div class="pagination-info" id="paginasiNasabah">—</div>
+          <div class="pagination-btns">
+            <button class="page-btn">‹</button>
+            <button class="page-btn active">1</button>
+            <button class="page-btn">›</button>
+          </div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<!-- MODAL TAMBAH / EDIT NASABAH -->
+<div class="modal-overlay" id="modalNasabah">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="modalNasabahTitle">👤 Tambah Nasabah Baru</div>
+      <button class="modal-close" onclick="closeModal('modalNasabah')">✕</button>
+    </div>
+
+    <form id="formNasabah">
+      <div class="grid-2">
+        <div class="form-group">
+          <label class="form-label">ID Nasabah</label>
+          <input type="text" class="form-control" id="inputId" placeholder="Otomatis" readonly
+                 style="background:#f5f5f5;">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Status</label>
+          <select class="form-control" id="inputStatus">
+            <option>Aktif</option>
+            <option>Tidak Aktif</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Nama Lengkap <span style="color:red">*</span></label>
+        <div class="input-group">
+          <span class="input-icon">👤</span>
+          <input type="text" class="form-control" id="inputNama" placeholder="Masukkan nama lengkap" required>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Nomor Telepon <span style="color:red">*</span></label>
+        <div class="input-group">
+          <span class="input-icon">📱</span>
+          <input type="tel" class="form-control" id="inputTelepon" placeholder="08xx-xxxx-xxxx" required>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Alamat</label>
+        <textarea class="form-control" id="inputAlamat" rows="2" placeholder="Masukkan alamat lengkap"></textarea>
+      </div>
+
+      <div class="grid-2">
+        <div class="form-group">
+          <label class="form-label">Saldo Awal (Rp)</label>
+          <div class="input-group">
+            <span class="input-icon">💰</span>
+            <input type="number" class="form-control" id="inputSaldo" value="0" min="0">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Poin Awal</label>
+          <div class="input-group">
+            <span class="input-icon">⭐</span>
+            <input type="number" class="form-control" id="inputPoin" value="0" min="0">
+          </div>
+        </div>
+      </div>
+    </form>
+
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modalNasabah')">Batal</button>
+      <button class="btn btn-primary" onclick="simpanNasabah()">💾 Simpan</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL DETAIL NASABAH -->
+<div class="modal-overlay" id="modalDetailNasabah">
+  <div class="modal" style="width:560px;">
+    <div class="modal-header">
+      <div class="modal-title">🔍 Profil Nasabah</div>
+      <button class="modal-close" onclick="closeModal('modalDetailNasabah')">✕</button>
+    </div>
+    <div id="detailNasabahContent"></div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modalDetailNasabah')">Tutup</button>
+    </div>
+  </div>
+</div>
+
+<script src="../js/app.js"></script>
+<script>
+  let editingIdx = null;
+  let filteredNasabah = [...sampleNasabah];
+
+  function renderNasabah(data) {
+    const tbody = document.getElementById('nasabahTable');
+    tbody.innerHTML = '';
+    if (data.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; padding:40px; color:var(--text-muted);">Tidak ada nasabah ditemukan</td></tr>`;
+      return;
+    }
+    data.forEach((n, idx) => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td><strong>${n.id}</strong></td>
+        <td>
+          <div style="display:flex; align-items:center; gap:10px;">
+            <div style="width:36px; height:36px; background:#e8f5e9; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:16px;">👤</div>
+            <strong>${n.nama}</strong>
+          </div>
+        </td>
+        <td>${n.telepon}</td>
+        <td style="max-width:180px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${n.alamat}</td>
+        <td><strong style="color:var(--primary);">${formatRupiah(n.saldo)}</strong></td>
+        <td>
+          <span style="background:#fff8e1; color:#e65100; padding:3px 10px; border-radius:20px; font-size:12px; font-weight:600;">⭐ ${n.poin}</span>
+        </td>
+        <td>
+          <span class="badge-status ${n.status === 'Aktif' ? 'success' : 'danger'}">● ${n.status}</span>
+        </td>
+        <td>
+          <button class="btn-icon" title="Detail" onclick="detailNasabah(${idx})">👁️</button>
+          <button class="btn-icon" title="Edit" style="margin:0 4px;" onclick="editNasabah(${idx})">✏️</button>
+          <button class="btn-icon" title="Hapus" onclick="hapusNasabah(${idx})">🗑️</button>
+        </td>
+      `;
+      tbody.appendChild(tr);
+    });
+    document.getElementById('paginasiNasabah').textContent = `Menampilkan ${data.length} dari ${sampleNasabah.length} nasabah`;
+  }
+
+  function applyFilterNasabah() {
+    const q      = document.getElementById('searchNasabah').value.toLowerCase();
+    const status = document.getElementById('filterStatusNasabah').value;
+    filteredNasabah = sampleNasabah.filter(n =>
+      (n.nama.toLowerCase().includes(q) || n.id.toLowerCase().includes(q) || n.telepon.includes(q)) &&
+      (!status || n.status === status)
+    );
+    renderNasabah(filteredNasabah);
+  }
+
+  function simpanNasabah() {
+    const nama     = document.getElementById('inputNama').value.trim();
+    const telepon  = document.getElementById('inputTelepon').value.trim();
+    const alamat   = document.getElementById('inputAlamat').value.trim();
+    const saldo    = parseInt(document.getElementById('inputSaldo').value) || 0;
+    const poin     = parseInt(document.getElementById('inputPoin').value) || 0;
+    const status   = document.getElementById('inputStatus').value;
+
+    if (!nama || !telepon) {
+      showToast('Nama dan telepon wajib diisi!', 'danger');
+      return;
+    }
+
+    if (editingIdx !== null) {
+      sampleNasabah[editingIdx] = { ...sampleNasabah[editingIdx], nama, telepon, alamat, saldo, poin, status };
+      showToast('Data nasabah berhasil diperbarui!', 'success');
+      editingIdx = null;
+    } else {
+      const newId = 'NS' + String(sampleNasabah.length + 1).padStart(3, '0');
+      sampleNasabah.unshift({ id: newId, nama, telepon, alamat, saldo, poin, status });
+      showToast('Nasabah baru berhasil ditambahkan!', 'success');
+    }
+
+    closeModal('modalNasabah');
+    filteredNasabah = [...sampleNasabah];
+    renderNasabah(filteredNasabah);
+    resetForm();
+  }
+
+  function editNasabah(idx) {
+    editingIdx = idx;
+    const n = filteredNasabah[idx];
+    document.getElementById('modalNasabahTitle').textContent = '✏️ Edit Nasabah';
+    document.getElementById('inputId').value      = n.id;
+    document.getElementById('inputNama').value    = n.nama;
+    document.getElementById('inputTelepon').value = n.telepon;
+    document.getElementById('inputAlamat').value  = n.alamat;
+    document.getElementById('inputSaldo').value   = n.saldo;
+    document.getElementById('inputPoin').value    = n.poin;
+    document.getElementById('inputStatus').value  = n.status;
+    openModal('modalNasabah');
+  }
+
+  function hapusNasabah(idx) {
+    confirmAction(`Hapus nasabah "${filteredNasabah[idx].nama}"? Tindakan ini tidak dapat dibatalkan.`, () => {
+      const id = filteredNasabah[idx].id;
+      const i  = sampleNasabah.findIndex(n => n.id === id);
+      if (i !== -1) sampleNasabah.splice(i, 1);
+      filteredNasabah.splice(idx, 1);
+      renderNasabah(filteredNasabah);
+      showToast('Nasabah berhasil dihapus', 'warning');
+    });
+  }
+
+  function detailNasabah(idx) {
+    const n = filteredNasabah[idx];
+    const trCount = sampleTransaksi.filter(t => t.nasabah === n.nama).length;
+    const trTotal = sampleTransaksi.filter(t => t.nasabah === n.nama && t.status === 'Selesai')
+                      .reduce((sum, t) => sum + t.total, 0);
+    document.getElementById('detailNasabahContent').innerHTML = `
+      <div style="text-align:center; margin-bottom:20px;">
+        <div style="width:70px; height:70px; background:#e8f5e9; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:36px; margin:0 auto 12px;">👤</div>
+        <h3 style="font-size:20px;">${n.nama}</h3>
+        <span class="badge-status ${n.status === 'Aktif' ? 'success' : 'danger'}" style="margin-top:6px;">● ${n.status}</span>
+      </div>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px 20px; background:#f9f9f9; padding:16px; border-radius:10px; font-size:13.5px;">
+        <div><span style="color:var(--text-muted); font-size:11px;">ID NASABAH</span><br><strong>${n.id}</strong></div>
+        <div><span style="color:var(--text-muted); font-size:11px;">TELEPON</span><br><strong>${n.telepon}</strong></div>
+        <div><span style="color:var(--text-muted); font-size:11px;">SALDO TABUNGAN</span><br><strong style="color:var(--primary); font-size:16px;">${formatRupiah(n.saldo)}</strong></div>
+        <div><span style="color:var(--text-muted); font-size:11px;">POIN</span><br><strong>⭐ ${n.poin} poin</strong></div>
+        <div style="grid-column:span 2;"><span style="color:var(--text-muted); font-size:11px;">ALAMAT</span><br><strong>${n.alamat}</strong></div>
+        <div><span style="color:var(--text-muted); font-size:11px;">TOTAL TRANSAKSI</span><br><strong>${trCount} kali</strong></div>
+        <div><span style="color:var(--text-muted); font-size:11px;">TOTAL SETORAN</span><br><strong style="color:var(--primary);">${formatRupiah(trTotal)}</strong></div>
+      </div>
+    `;
+    openModal('modalDetailNasabah');
+  }
+
+  function resetForm() {
+    document.getElementById('inputId').value      = '';
+    document.getElementById('inputNama').value    = '';
+    document.getElementById('inputTelepon').value = '';
+    document.getElementById('inputAlamat').value  = '';
+    document.getElementById('inputSaldo').value   = '0';
+    document.getElementById('inputPoin').value    = '0';
+    document.getElementById('inputStatus').value  = 'Aktif';
+    document.getElementById('modalNasabahTitle').textContent = '👤 Tambah Nasabah Baru';
+    editingIdx = null;
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    renderNasabah(sampleNasabah);
+  });
+</script>
+
+</body>
+</html>

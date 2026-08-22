@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tabungan — Bank Sampah Hijau Lestari</title>
+  <link rel="stylesheet" href="../css/style.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>♻️</text></svg>">
+</head>
+<body>
+<div class="app-layout">
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-logo">
+        <div class="logo-icon">♻️</div>
+        <div class="logo-text"><h2>Bank Sampah</h2><span>Hijau Lestari</span></div>
+      </div>
+    </div>
+    <div class="sidebar-user">
+      <div class="user-avatar">👤</div>
+      <div class="user-info"><h4 id="sidebarUserName">Loading...</h4><span id="sidebarUserRole">—</span></div>
+    </div>
+    <nav class="sidebar-nav">
+      <p class="nav-section-title">Menu Utama</p>
+      <li class="nav-item"><a href="dashboard.html"><span class="nav-icon">🏠</span> Dashboard</a></li>
+      <li class="nav-item"><a href="setor.html"><span class="nav-icon">📦</span> Setor Sampah</a></li>
+      <li class="nav-item"><a href="nasabah.html"><span class="nav-icon">👥</span> Data Nasabah</a></li>
+      <li class="nav-item"><a href="transaksi.html"><span class="nav-icon">📋</span> Riwayat Transaksi</a></li>
+      <p class="nav-section-title">Keuangan</p>
+      <li class="nav-item active"><a href="tabungan.html"><span class="nav-icon">💰</span> Tabungan</a></li>
+      <li class="nav-item"><a href="penarikan.html"><span class="nav-icon">🏧</span> Penarikan</a></li>
+      <p class="nav-section-title">Laporan</p>
+      <li class="nav-item"><a href="laporan.html"><span class="nav-icon">📊</span> Laporan</a></li>
+      <li class="nav-item"><a href="harga.html"><span class="nav-icon">🏷️</span> Harga Sampah</a></li>
+      <p class="nav-section-title">Sistem</p>
+      <li class="nav-item"><a href="pengaturan.html"><span class="nav-icon">⚙️</span> Pengaturan</a></li>
+    </nav>
+    <div class="sidebar-footer">
+      <a href="#" onclick="logout()"><span>🚪</span> Keluar</a>
+    </div>
+  </aside>
+
+  <div class="main-content">
+    <header class="topbar">
+      <div class="topbar-left"><h1>Tabungan Nasabah</h1><p id="topbarDate">Memuat tanggal...</p></div>
+      <div class="topbar-right">
+        <button class="topbar-btn">🔔<span class="badge">3</span></button>
+      </div>
+    </header>
+
+    <main class="page-content">
+      <div class="stats-grid" style="margin-bottom:24px;">
+        <div class="stat-card green">
+          <div class="stat-icon green">💰</div>
+          <div class="stat-info"><h3>Rp 12,45 jt</h3><p>Total Saldo Semua Nasabah</p></div>
+        </div>
+        <div class="stat-card yellow">
+          <div class="stat-icon yellow">📈</div>
+          <div class="stat-info"><h3>Rp 3,72 jt</h3><p>Masuk Bulan Ini</p></div>
+        </div>
+        <div class="stat-card blue">
+          <div class="stat-icon blue">📉</div>
+          <div class="stat-info"><h3>Rp 1,20 jt</h3><p>Ditarik Bulan Ini</p></div>
+        </div>
+        <div class="stat-card red">
+          <div class="stat-icon red">⭐</div>
+          <div class="stat-info"><h3>24.890</h3><p>Total Poin Aktif</p></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title"><span>💰</span> Saldo Tabungan Per Nasabah</div>
+        </div>
+        <div class="search-bar">
+          <div class="search-input-wrap">
+            <span class="search-icon">🔍</span>
+            <input type="text" placeholder="Cari nasabah..." id="searchTab" oninput="renderTab()">
+          </div>
+        </div>
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th>ID</th><th>Nama Nasabah</th><th>Saldo Tabungan</th><th>Poin</th>
+                <th>Transaksi Terakhir</th><th>Status</th><th>Aksi</th>
+              </tr>
+            </thead>
+            <tbody id="tabunganTable"></tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modalRiwayatTab">
+  <div class="modal" style="width:520px;">
+    <div class="modal-header">
+      <div class="modal-title" id="riwayatTabTitle">💰 Riwayat Tabungan</div>
+      <button class="modal-close" onclick="closeModal('modalRiwayatTab')">✕</button>
+    </div>
+    <div id="riwayatTabContent"></div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modalRiwayatTab')">Tutup</button>
+    </div>
+  </div>
+</div>
+
+<script src="../js/app.js"></script>
+<script>
+  function renderTab() {
+    const q = document.getElementById('searchTab').value.toLowerCase();
+    const tbody = document.getElementById('tabunganTable');
+    tbody.innerHTML = '';
+    const data = sampleNasabah.filter(n => n.nama.toLowerCase().includes(q) || n.id.toLowerCase().includes(q));
+    data.forEach((n, idx) => {
+      const lastTr = sampleTransaksi.filter(t => t.nasabah === n.nama && t.status === 'Selesai').sort((a,b) => b.tanggal.localeCompare(a.tanggal))[0];
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td><strong>${n.id}</strong></td>
+        <td>${n.nama}</td>
+        <td><strong style="color:var(--primary); font-size:15px;">${formatRupiah(n.saldo)}</strong></td>
+        <td><span style="background:#fff8e1;color:#e65100;padding:3px 10px;border-radius:20px;font-size:12px;font-weight:600;">⭐ ${n.poin}</span></td>
+        <td>${lastTr ? formatDate(lastTr.tanggal) : '—'}</td>
+        <td><span class="badge-status ${n.status==='Aktif'?'success':'danger'}">● ${n.status}</span></td>
+        <td><button class="btn btn-sm btn-outline" onclick="riwayatTab(${idx})">📜 Riwayat</button></td>
+      `;
+      tbody.appendChild(tr);
+    });
+  }
+
+  function riwayatTab(idx) {
+    const n = sampleNasabah[idx];
+    const trList = sampleTransaksi.filter(t => t.nasabah === n.nama);
+    document.getElementById('riwayatTabTitle').textContent = `💰 Riwayat — ${n.nama}`;
+    let rows = '';
+    if (trList.length === 0) {
+      rows = '<p style="text-align:center;color:var(--text-muted);padding:30px;">Belum ada transaksi</p>';
+    } else {
+      rows = `<table style="width:100%;font-size:13px;"><thead><tr style="background:#f5f5f5;"><th style="padding:8px;">Tanggal</th><th>Keterangan</th><th>Jumlah</th><th>Status</th></tr></thead><tbody>`;
+      trList.forEach(t => {
+        const sc = { Selesai:'success', Pending:'warning', Dibatalkan:'danger' }[t.status];
+        rows += `<tr style="border-bottom:1px solid #eee;">
+          <td style="padding:8px;">${formatDate(t.tanggal)}</td>
+          <td>Setoran ${t.jenis} (${t.berat}kg)</td>
+          <td style="color:var(--primary);font-weight:700;">+${formatRupiah(t.total)}</td>
+          <td><span class="badge-status ${sc}">● ${t.status}</span></td>
+        </tr>`;
+      });
+      rows += '</tbody></table>';
+    }
+    document.getElementById('riwayatTabContent').innerHTML = `
+      <div style="background:#f1f8e9;padding:12px 16px;border-radius:8px;margin-bottom:16px;display:flex;justify-content:space-between;font-size:13.5px;">
+        <span>Saldo saat ini:</span>
+        <strong style="color:var(--primary);font-size:16px;">${formatRupiah(n.saldo)}</strong>
+      </div>
+      ${rows}
+    `;
+    openModal('modalRiwayatTab');
+  }
+
+  document.addEventListener('DOMContentLoaded', renderTab);
+</script>
+</body>
+</html>
