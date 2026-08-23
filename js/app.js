@@ -134,10 +134,8 @@ const sampleTransaksi = [
 ];
 
 const hargaSampah = {
-  Plastik:    2500,
-  Kertas:     1500,
-  Logam:      8000,
-  Organik:    500,
-  Elektronik: 15000,
-  Kaca:       1000,
+  'Gelas Plastik': 1500, 'Botol Plastik': 1500, Kardus: 1300, Kaleng: 500,
+  Gebrus: 500, 'Besi 1': 2500, 'Besi 2': 2000, Duplek: 450,
+  'Kertas HVS': 1100, 'Kertas Buram': 500, Buku: 1000,
+  'Plastik Keras': 800, Aluminium: 20000,
 };

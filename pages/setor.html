@@ -98,12 +98,10 @@
           <div style="display:flex; gap:10px;">
             <select class="form-control" style="width:auto; padding:8px 12px; font-size:13px;" id="filterJenis">
               <option value="">Semua Jenis</option>
-              <option>Plastik</option>
-              <option>Kertas</option>
-              <option>Logam</option>
-              <option>Organik</option>
-              <option>Elektronik</option>
-              <option>Kaca</option>
+              <option>Gelas Plastik</option><option>Botol Plastik</option><option>Kardus</option>
+              <option>Kaleng</option><option>Gebrus</option><option>Besi 1</option><option>Besi 2</option>
+              <option>Duplek</option><option>Kertas HVS</option><option>Kertas Buram</option><option>Buku</option>
+              <option>Plastik Keras</option><option>Aluminium</option>
             </select>
             <select class="form-control" style="width:auto; padding:8px 12px; font-size:13px;" id="filterStatus">
               <option value="">Semua Status</option>
@@ -122,19 +120,23 @@
           <button class="btn btn-primary" onclick="openModal('modalSetor')">＋ Tambah</button>
         </div>
 
-        <div class="table-wrapper">
+        <div class="table-wrapper setor-rekap-wrapper">
           <table>
             <thead>
               <tr>
-                <th>ID</th>
-                <th>Nasabah</th>
-                <th>Jenis Sampah</th>
-                <th>Berat (kg)</th>
-                <th>Harga/kg</th>
-                <th>Total</th>
-                <th>Tanggal</th>
-                <th>Status</th>
-                <th>Aksi</th>
+                <th rowspan="2">Tgl.</th>
+                <th rowspan="2">No. Kartu</th>
+                <th rowspan="2">Nasabah</th>
+                <th colspan="13">Jenis Sampah/Kg</th>
+                <th colspan="3">Lainnya</th>
+                <th rowspan="2">Total Berat</th>
+                <th rowspan="2">Jumlah Saldo</th>
+                <th rowspan="2">Aksi</th>
+              </tr>
+              <tr>
+                <th>GP</th><th>BP</th><th>KD</th><th>KL</th><th>GB</th><th>BE1</th><th>BE2</th>
+                <th>DP</th><th>HVS</th><th>KB</th><th>BU</th><th>PK</th><th>AL</th>
+                <th>Jenis</th><th>Berat</th><th>Total Rp</th>
               </tr>
             </thead>
             <tbody id="setorTable"><!-- JS --></tbody>
@@ -158,7 +160,7 @@
 
 <!-- MODAL TAMBAH SETORAN -->
 <div class="modal-overlay" id="modalSetor">
-  <div class="modal">
+  <div class="modal setor-modal">
     <div class="modal-header">
       <div class="modal-title">📦 Tambah Setoran Sampah</div>
       <button class="modal-close" onclick="closeModal('modalSetor')">✕</button>
@@ -178,48 +180,18 @@
         <span>Poin: <strong id="infPoin">—</strong></span>
       </div>
 
-      <div class="grid-2">
-        <div class="form-group">
-          <label class="form-label">Jenis Sampah</label>
-          <select class="form-control" id="jenisSetor" required onchange="hitungTotal()">
-            <option value="">— Pilih Jenis —</option>
-            <option value="Plastik">🧴 Plastik — Rp 2.500/kg</option>
-            <option value="Kertas">📰 Kertas — Rp 1.500/kg</option>
-            <option value="Logam">🔩 Logam — Rp 8.000/kg</option>
-            <option value="Organik">🌿 Organik — Rp 500/kg</option>
-            <option value="Elektronik">📱 Elektronik — Rp 15.000/kg</option>
-            <option value="Kaca">🍶 Kaca — Rp 1.000/kg</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label class="form-label">Berat (kg)</label>
-          <div class="input-group">
-            <span class="input-icon">⚖️</span>
-            <input type="number" class="form-control" id="beratSetor" min="0.1" step="0.1"
-                   placeholder="0.0" required oninput="hitungTotal()">
-          </div>
-        </div>
-      </div>
-
-      <!-- PREVIEW HARGA -->
-      <div id="previewHarga" style="display:none; background:#fff8e1; padding:14px 16px; border-radius:8px; margin-bottom:16px; border-left:3px solid var(--secondary);">
-        <div style="display:flex; justify-content:space-between; font-size:13px; margin-bottom:6px;">
-          <span>Harga per kg:</span>
-          <strong id="prevHargaKg">—</strong>
-        </div>
-        <div style="display:flex; justify-content:space-between; font-size:13px; margin-bottom:6px;">
-          <span>Berat:</span>
-          <strong id="prevBerat">—</strong>
-        </div>
-        <div style="display:flex; justify-content:space-between; font-size:15px; border-top:1px dashed #ffd54f; padding-top:8px;">
-          <strong>Total:</strong>
-          <strong style="color:var(--primary);" id="prevTotal">—</strong>
-        </div>
-      </div>
-
       <div class="form-group">
-        <label class="form-label">Tanggal Setoran</label>
-        <input type="date" class="form-control" id="tglSetor" required>
+        <label class="form-label">Berat Jenis Sampah (kg)</label>
+        <div class="setor-jenis-grid" id="jenisInputs"></div>
+      </div>
+
+      <div class="form-group setor-lainnya">
+        <label class="form-label">Lainnya</label>
+        <div class="grid-3">
+          <input type="text" class="form-control" id="lainnyaJenis" placeholder="Jenis sampah">
+          <input type="number" class="form-control" id="lainnyaBerat" min="0" step="0.01" placeholder="Berat (kg)">
+          <input type="number" class="form-control" id="lainnyaTotal" min="0" step="100" placeholder="Harga/kg">
+        </div>
       </div>
 
       <div class="form-group">
@@ -230,7 +202,7 @@
 
     <div class="modal-footer">
       <button class="btn btn-outline" onclick="closeModal('modalSetor')">Batal</button>
-      <button class="btn btn-primary" onclick="submitSetor()">💾 Simpan Setoran</button>
+          <button type="submit" form="formSetor" class="btn btn-primary">💾 Submit Setoran</button>
     </div>
   </div>
 </div>
@@ -250,10 +222,17 @@
   </div>
 </div>
 
-<script src="../js/api.js"></script>
+<script src="../js/api.js?v=2"></script>
 <script src="../js/app.js"></script>
 <script>
-  const icons = { Plastik:'🧴', Kertas:'📰', Logam:'🔩', Organik:'🌿', Elektronik:'📱', Kaca:'🍶' };
+  const icons = { 'Gelas Plastik':'🥤', 'Botol Plastik':'🧴', Kardus:'📦', Kaleng:'🥫', Gebrus:'♻️', 'Besi 1':'🔩', 'Besi 2':'🔧', Duplek:'<img src="../assets/duplek-box.svg" alt="Duplek" class="trash-icon">', 'Kertas HVS':'📃', 'Kertas Buram':'📰', Buku:'📚', 'Plastik Keras':'🪣', Aluminium:'<img src="../assets/aluminium-stack.svg" alt="Aluminium" class="trash-icon">' };
+  const jenisKode = {
+    'Gelas Plastik':'GP', 'Botol Plastik':'BP', Kardus:'KD', Kaleng:'KL', Gebrus:'GB',
+    'Besi 1':'BE1', 'Besi 2':'BE2', Duplek:'DP', 'Kertas HVS':'HVS', 'Kertas Buram':'KB',
+    Buku:'BU', 'Plastik Keras':'PK', Aluminium:'AL'
+  };
+  const jenisKolom = Object.values(jenisKode);
+  const urutanJenis = ['GP', 'BP', 'KD', 'KL', 'GB', 'BE1', 'BE2', 'DP', 'HVS', 'KB', 'BU', 'PK', 'AL'];
   const statusClass = { Selesai:'success', Pending:'warning', Dibatalkan:'danger' };
 
   let allTransaksi = [];   // cache dari API
@@ -287,7 +266,7 @@
       const d   = res.data;
       // update 3 card stat jika ada
       const cards = document.querySelectorAll('.stat-info h3');
-      if (cards[0]) cards[0].textContent = d.transaksi_hari_ini + ' setoran';
+      if (cards[0]) cards[0].textContent = (d.transaksi_hari_ini || 0) + ' setoran';
     } catch (_) {}
   }
 
@@ -295,32 +274,58 @@
     const tbody = document.getElementById('setorTable');
     tbody.innerHTML = '';
     if (data.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="9" style="text-align:center; padding:40px; color:var(--text-muted);">Tidak ada data ditemukan</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="22" style="text-align:center; padding:40px; color:var(--text-muted);">Tidak ada data ditemukan</td></tr>`;
       document.getElementById('paginasiInfo').textContent = '0 data';
       return;
     }
+
+    const rekap = new Map();
     data.forEach((t) => {
-      const jenisNama = t.jenis_nama || '—';
-      const jenisKey  = jenisNama.toLowerCase();
+      const key = `${t.tanggal}|${t.nasabah_id}`;
+      if (!rekap.has(key)) {
+        rekap.set(key, {
+          tanggal: t.tanggal, kode: t.nasabah_kode || '—', nama: t.nasabah_nama || '—',
+          berat: Object.fromEntries(jenisKolom.map(kode => [kode, 0])),
+          lainnya: [], ids: [], totalBerat: 0, totalSaldo: 0
+        });
+      }
+      const row = rekap.get(key);
+      row.ids.push(t.id);
+      const kode = jenisKode[t.jenis_nama];
+      const berat = Number(t.berat_kg) || 0;
+      const total = Number(t.total) || 0;
+      if (kode) {
+        row.berat[kode] += berat;
+      } else {
+        row.lainnya.push({ nama: t.jenis_nama || 'Lainnya', berat, total });
+      }
+      row.totalBerat += berat;
+      row.totalSaldo += total;
+    });
+
+    Array.from(rekap.values()).forEach((row) => {
+      const lainnya = row.lainnya.length
+        ? row.lainnya.map(item => `${item.nama}: ${item.berat.toFixed(2)} Kg`).join('<br>')
+        : '—';
+      const lainnyaBerat = row.lainnya.reduce((sum, item) => sum + item.berat, 0);
+      const lainnyaTotal = row.lainnya.reduce((sum, item) => sum + item.total, 0);
       const tr = document.createElement('tr');
       tr.innerHTML = `
-        <td><strong>${t.kode}</strong></td>
-        <td>${t.nasabah_nama}</td>
-        <td><span class="trash-tag ${jenisKey}">${t.jenis_ikon||'♻️'} ${jenisNama}</span></td>
-        <td>${t.berat_kg} kg</td>
-        <td>${formatRupiah(t.harga_kg)}</td>
-        <td><strong style="color:var(--primary);">${formatRupiah(t.total)}</strong></td>
-        <td>${formatDate(t.tanggal)}</td>
-        <td><span class="badge-status ${statusClass[t.status]||'info'}">● ${t.status}</span></td>
-        <td>
-          <button class="btn-icon" title="Detail" onclick="showDetail(${t.id})">👁️</button>
-          <button class="btn-icon" title="Hapus" style="margin-left:4px;" onclick="hapusTransaksi(${t.id})">🗑️</button>
-        </td>
+        <td><strong>${formatShortDate(row.tanggal)}</strong></td>
+        <td><strong>${row.kode}</strong></td>
+        <td>${row.nama}</td>
+        ${jenisKolom.map(kode => `<td>${row.berat[kode] ? row.berat[kode].toFixed(2) + ' Kg' : ''}</td>`).join('')}
+        <td>${lainnya}</td>
+        <td>${lainnyaBerat ? lainnyaBerat.toFixed(2) + ' Kg' : ''}</td>
+        <td>${lainnyaTotal ? formatRupiah(lainnyaTotal) : ''}</td>
+        <td><strong>${row.totalBerat.toFixed(2)} Kg</strong></td>
+        <td><strong style="color:var(--primary);">${formatRupiah(row.totalSaldo)}</strong></td>
+        <td><button class="btn-icon" title="Hapus setoran" onclick='hapusRekap(${JSON.stringify(row.ids)})'>🗑️</button></td>
       `;
       tbody.appendChild(tr);
     });
     document.getElementById('paginasiInfo').textContent =
-      `Menampilkan ${data.length} data`;
+      `Menampilkan ${rekap.size} rekap setoran`;
   }
 
   // ---- FILTER ----
@@ -331,22 +336,34 @@
     document.getElementById('filterStatus').addEventListener('change',applyFilter);
   });
 
-  // ---- HITUNG TOTAL (pakai harga dari DB) ----
-  function hitungTotal() {
-    const jenisId = document.getElementById('jenisSetor').value;
-    const berat   = parseFloat(document.getElementById('beratSetor').value) || 0;
-    const preview = document.getElementById('previewHarga');
-    if (!jenisId || berat <= 0) { preview.style.display = 'none'; return; }
+  function renderJenisInputs() {
+    const container = document.getElementById('jenisInputs');
+    container.innerHTML = '';
+    allJenis.filter(j => j.aktif).sort((a, b) => urutanJenis.indexOf(jenisKode[a.nama]) - urutanJenis.indexOf(jenisKode[b.nama])).forEach(jenis => {
+      const kode = jenisKode[jenis.nama] || jenis.nama;
+      const item = document.createElement('label');
+      item.className = 'setor-jenis-item';
+      item.innerHTML = `
+        <span class="setor-jenis-code">${kode}</span>
+        <span class="setor-jenis-name">${jenis.nama}</span>
+        <span class="setor-jenis-price">${formatRupiah(jenis.harga_kg)}/kg</span>
+        <input type="hidden" data-jenis-id="${jenis.id}">
+        <input type="number" class="form-control setor-jenis-input" data-jenis-id="${jenis.id}" min="0" step="0.01" placeholder="0">
+      `;
+      container.appendChild(item);
+    });
+  }
 
-    const jenis = allJenis.find(j => j.id == jenisId);
-    if (!jenis) return;
-    const harga = jenis.harga_kg;
-    const total = harga * berat;
+  function getToday() {
+    const today = new Date();
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const day = String(today.getDate()).padStart(2, '0');
+    return `${today.getFullYear()}-${month}-${day}`;
+  }
 
-    preview.style.display = 'block';
-    document.getElementById('prevHargaKg').textContent = formatRupiah(harga);
-    document.getElementById('prevBerat').textContent   = berat + ' kg';
-    document.getElementById('prevTotal').textContent   = formatRupiah(total);
+  function formatShortDate(dateStr) {
+    const date = new Date(`${dateStr}T00:00:00`);
+    return date.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
   }
 
   // ---- INFO NASABAH SAAT DIPILIH ----
@@ -367,20 +384,29 @@
   // ---- SUBMIT SETORAN KE DATABASE ----
   async function submitSetor() {
     const nasabah_id = parseInt(document.getElementById('pilihNasabah').value);
-    const jenis_id   = parseInt(document.getElementById('jenisSetor').value);
-    const berat_kg   = parseFloat(document.getElementById('beratSetor').value);
-    const tanggal    = document.getElementById('tglSetor').value;
+    const tanggal    = getToday();
     const catatan    = document.getElementById('catatanSetor').value;
+    const items = Array.from(document.querySelectorAll('.setor-jenis-input'))
+      .map(input => ({ jenis_id: Number(input.dataset.jenisId), berat_kg: Number(input.value) || 0 }))
+      .filter(item => item.berat_kg > 0);
+    const lainnyaBerat = Number(document.getElementById('lainnyaBerat').value) || 0;
+    const lainnyaJenis = document.getElementById('lainnyaJenis').value.trim();
+    const lainnyaTotal = Number(document.getElementById('lainnyaTotal').value) || 0;
 
-    if (!nasabah_id || !jenis_id || !berat_kg || !tanggal) {
-      showToast('Harap lengkapi semua field!', 'danger');
+    if (!nasabah_id || !tanggal || (!items.length && !lainnyaBerat)) {
+      showToast('Pilih nasabah dan isi minimal satu berat sampah!', 'danger');
+      return;
+    }
+    if (lainnyaBerat && (!lainnyaJenis || !lainnyaTotal)) {
+      showToast('Lengkapi jenis dan harga/kg pada bagian Lainnya!', 'danger');
       return;
     }
 
     try {
-      const res = await TransaksiAPI.create({ nasabah_id, jenis_id, berat_kg, tanggal, catatan });
+      const res = await TransaksiAPI.createBatch({ nasabah_id, items, tanggal, catatan,
+        lainnya: lainnyaBerat ? { jenis: lainnyaJenis, berat_kg: lainnyaBerat, harga_kg: lainnyaTotal } : null });
       closeModal('modalSetor');
-      showToast(`Setoran ${res.kode} berhasil disimpan! Total: ${formatRupiah(res.total)}`, 'success');
+      showToast(`${res.jumlah} jenis setoran berhasil disimpan! Total: ${formatRupiah(res.total)}`, 'success');
       resetFormSetor();
       loadTransaksi();
     } catch (err) {
@@ -390,10 +416,11 @@
 
   function resetFormSetor() {
     document.getElementById('pilihNasabah').value = '';
-    document.getElementById('jenisSetor').value   = '';
-    document.getElementById('beratSetor').value   = '';
+    document.querySelectorAll('.setor-jenis-input').forEach(input => input.value = '');
+    document.getElementById('lainnyaJenis').value = '';
+    document.getElementById('lainnyaBerat').value = '';
+    document.getElementById('lainnyaTotal').value = '';
     document.getElementById('catatanSetor').value = '';
-    document.getElementById('previewHarga').style.display = 'none';
     document.getElementById('infoNasabah').style.display  = 'none';
   }
 
@@ -403,7 +430,7 @@
       const res = await TransaksiAPI.getById(id);
       const t   = res.data;
       currentDetail = t;
-      const jenisKey = (t.jenis_nama||'').toLowerCase();
+      const jenisKey = (t.jenis_nama||'').toLowerCase().replace(/\s+/g, '-');
       document.getElementById('detailContent').innerHTML = `
         <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px 20px; background:#f9f9f9; padding:16px; border-radius:10px;">
           <div><span style="color:var(--text-muted); font-size:12px;">ID Transaksi</span><br><strong>${t.kode}</strong></div>
@@ -439,15 +466,24 @@
     });
   }
 
+  async function hapusRekap(ids) {
+    confirmAction('Hapus seluruh setoran pada baris ini?', async () => {
+      try {
+        await TransaksiAPI.deleteBatch(ids);
+        showToast('Setoran berhasil dihapus', 'warning');
+        loadTransaksi();
+      } catch (err) {
+        showToast('Gagal menghapus setoran: ' + err.message, 'danger');
+      }
+    });
+  }
+
   function printDetail() {
     window.print();
   }
 
   // ---- INIT ----
   document.addEventListener('DOMContentLoaded', async () => {
-    const today = new Date().toISOString().split('T')[0];
-    document.getElementById('tglSetor').value = today;
-
     // Load nasabah dari database ke select
     try {
       const nRes = await NasabahAPI.getAll({ status: 'Aktif' });
@@ -463,14 +499,8 @@
     // Load jenis sampah dari database ke select
     try {
       const jRes = await JenisAPI.getAll();
-      allJenis   = jRes.data || [];
-      const selJ = document.getElementById('jenisSetor');
-      allJenis.filter(j => j.aktif).forEach(j => {
-        const opt = document.createElement('option');
-        opt.value       = j.id;   // gunakan ID integer
-        opt.textContent = `${j.ikon} ${j.nama} — ${formatRupiah(j.harga_kg)}/kg`;
-        selJ.appendChild(opt);
-      });
+      allJenis = jRes.data || [];
+      renderJenisInputs();
     } catch (err) { showToast('Gagal load jenis sampah', 'danger'); }
 
     loadTransaksi();

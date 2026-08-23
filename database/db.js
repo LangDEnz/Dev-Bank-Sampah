@@ -112,7 +112,37 @@ db.serialize(() => {
   // SEED DATA AWAL
   // =============================================
   seedData();
+  syncJenisSampah();
+  db.run("UPDATE nasabah SET kode = 'NK.' || substr(kode, 3) WHERE kode GLOB 'NS[0-9]*'");
 });
+
+function syncJenisSampah() {
+  const jenis = [
+    ['Gelas Plastik', '🥤', 'Anorganik', 1500],
+    ['Botol Plastik', '🧴', 'Anorganik', 1500],
+    ['Kardus', '📦', 'Anorganik', 1300],
+    ['Kaleng', '🥫', 'Anorganik', 500],
+    ['Gebrus', '♻️', 'Anorganik', 500],
+    ['Besi 1', '🔩', 'Logam', 2500],
+    ['Besi 2', '🔧', 'Logam', 2000],
+    ['Duplek', '<img src="../assets/duplek-box.svg" alt="Duplek" class="trash-icon">', 'Kertas', 450],
+    ['Kertas HVS', '📃', 'Kertas', 1100],
+    ['Kertas Buram', '📰', 'Kertas', 500],
+    ['Buku', '📚', 'Kertas', 1000],
+    ['Plastik Keras', '🪣', 'Anorganik', 800],
+    ['Aluminium', '<img src="../assets/aluminium-stack.svg" alt="Aluminium" class="trash-icon">', 'Logam', 20000],
+  ];
+
+  db.run(`UPDATE jenis_sampah SET aktif = 0 WHERE nama NOT IN (${jenis.map(() => '?').join(',')})`, jenis.map(item => item[0]));
+  jenis.forEach(([nama, ikon, kategori, harga]) => {
+    db.run(
+      `INSERT INTO jenis_sampah (nama, ikon, kategori, harga_kg, poin_kg, aktif)
+       VALUES (?, ?, ?, ?, 1, 1)
+       ON CONFLICT(nama) DO UPDATE SET ikon=excluded.ikon, kategori=excluded.kategori, harga_kg=excluded.harga_kg, aktif=1, updated_at=CURRENT_TIMESTAMP`,
+      [nama, ikon, kategori, harga]
+    );
+  });
+}
 
 async function seedData() {
   // Cek apakah data sudah ada
@@ -136,12 +166,13 @@ async function seedData() {
 
     // Jenis Sampah
     const jenis = [
-      ['Plastik',    '🧴', 'Anorganik', 2500,  2],
-      ['Kertas',     '📰', 'Anorganik', 1500,  1],
-      ['Logam',      '🔩', 'Anorganik', 8000,  5],
-      ['Organik',    '🌿', 'Organik',   500,   1],
-      ['Elektronik', '📱', 'Khusus',    15000, 8],
-      ['Kaca',       '🍶', 'Anorganik', 1000,  1],
+      ['Gelas Plastik', '🥤', 'Anorganik', 1500, 1], ['Botol Plastik', '🧴', 'Anorganik', 1500, 1],
+      ['Kardus', '📦', 'Anorganik', 1300, 1], ['Kaleng', '🥫', 'Anorganik', 500, 1],
+      ['Gebrus', '♻️', 'Anorganik', 500, 1], ['Besi 1', '🔩', 'Logam', 2500, 1],
+      ['Besi 2', '🔧', 'Logam', 2000, 1], ['Duplek', '<img src="../assets/duplek-box.svg" alt="Duplek" class="trash-icon">', 'Kertas', 450, 1],
+      ['Kertas HVS', '📃', 'Kertas', 1100, 1], ['Kertas Buram', '📰', 'Kertas', 500, 1],
+      ['Buku', '📚', 'Kertas', 1000, 1], ['Plastik Keras', '🪣', 'Anorganik', 800, 1],
+      ['Aluminium', '<img src="../assets/aluminium-stack.svg" alt="Aluminium" class="trash-icon">', 'Logam', 20000, 1],
     ];
     jenis.forEach(([nama, ikon, kategori, harga_kg, poin_kg]) => {
       db.run(`INSERT INTO jenis_sampah (nama, ikon, kategori, harga_kg, poin_kg) VALUES (?,?,?,?,?)`,
@@ -150,13 +181,13 @@ async function seedData() {
 
     // Nasabah
     const nasabahData = [
-      ['NS001', 'Siti Rahayu',    '081234567890', 'Jl. Mawar No. 12',   145000, 290, 'Aktif'],
-      ['NS002', 'Budi Santoso',   '082345678901', 'Jl. Melati No. 5',   87500,  175, 'Aktif'],
-      ['NS003', 'Dewi Kusuma',    '083456789012', 'Jl. Dahlia No. 8',   210000, 420, 'Aktif'],
-      ['NS004', 'Ahmad Fauzi',    '084567890123', 'Jl. Anggrek No. 3',  32000,  64,  'Aktif'],
-      ['NS005', 'Rina Wulandari', '085678901234', 'Jl. Kenanga No. 7',  0,      0,   'Tidak Aktif'],
-      ['NS006', 'Hendra Wijaya',  '086789012345', 'Jl. Cempaka No. 1',  165000, 330, 'Aktif'],
-      ['NS007', 'Maya Sari',      '087890123456', 'Jl. Kamboja No. 9',  54000,  108, 'Aktif'],
+      ['NK.001', 'Siti Rahayu',    '081234567890', 'Jl. Mawar No. 12',   145000, 290, 'Aktif'],
+      ['NK.002', 'Budi Santoso',   '082345678901', 'Jl. Melati No. 5',   87500,  175, 'Aktif'],
+      ['NK.003', 'Dewi Kusuma',    '083456789012', 'Jl. Dahlia No. 8',   210000, 420, 'Aktif'],
+      ['NK.004', 'Ahmad Fauzi',    '084567890123', 'Jl. Anggrek No. 3',  32000,  64,  'Aktif'],
+      ['NK.005', 'Rina Wulandari', '085678901234', 'Jl. Kenanga No. 7',  0,      0,   'Tidak Aktif'],
+      ['NK.006', 'Hendra Wijaya',  '086789012345', 'Jl. Cempaka No. 1',  165000, 330, 'Aktif'],
+      ['NK.007', 'Maya Sari',      '087890123456', 'Jl. Kamboja No. 9',  54000,  108, 'Aktif'],
     ];
     nasabahData.forEach(([kode, nama, telepon, alamat, saldo, poin, status]) => {
       db.run(`INSERT INTO nasabah (kode, nama, telepon, alamat, saldo, poin, status) VALUES (?,?,?,?,?,?,?)`,

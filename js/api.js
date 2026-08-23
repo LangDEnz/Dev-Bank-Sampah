@@ -102,6 +102,12 @@ const NasabahAPI = {
   getById(id) {
     return apiFetch(`/nasabah/${id}`);
   },
+  getWeeklyDeposits() {
+    return apiFetch('/nasabah/setoran-minggu-ini');
+  },
+  getStats() {
+    return apiFetch('/nasabah/stats');
+  },
   create(data) {
     return apiFetch('/nasabah', { method: 'POST', body: JSON.stringify(data) });
   },
@@ -127,12 +133,18 @@ const TransaksiAPI = {
   create(data) {
     return apiFetch('/transaksi', { method: 'POST', body: JSON.stringify(data) });
   },
+  createBatch(data) {
+    return apiFetch('/transaksi/batch', { method: 'POST', body: JSON.stringify(data) });
+  },
   updateStatus(id, status) {
     return apiFetch(`/transaksi/${id}/status`, { method: 'PUT', body: JSON.stringify({ status }) });
   },
   delete(id) {
     return apiFetch(`/transaksi/${id}`, { method: 'DELETE' });
-  }
+  },
+  deleteBatch(ids) {
+    return apiFetch('/transaksi/batch', { method: 'DELETE', body: JSON.stringify({ ids }) });
+  },
 };
 
 // =============================================

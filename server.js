@@ -149,25 +149,80 @@ app.delete('/api/users/:id', authMiddleware, adminOnly, (req, res) => {
 // NASABAH ROUTES
 // =============================================
 
+function syncNasabahStatus(callback) {
+  db.run(
+    `UPDATE nasabah
+     SET status = CASE
+       WHEN EXISTS (
+         SELECT 1 FROM transaksi t
+         WHERE t.nasabah_id = nasabah.id
+           AND t.status = 'Selesai'
+           AND t.tanggal >= date('now', '-1 month')
+       ) THEN 'Aktif'
+       WHEN created_at < datetime('now', '-1 month') THEN 'Tidak Aktif'
+       ELSE status
+     END,
+     updated_at = CURRENT_TIMESTAMP
+     WHERE status IN ('Aktif', 'Tidak Aktif')`,
+    callback
+  );
+}
+
 // GET /api/nasabah
 app.get('/api/nasabah', authMiddleware, (req, res) => {
-  const { q, status } = req.query;
-  let sql    = 'SELECT * FROM nasabah WHERE 1=1';
-  const params = [];
+  syncNasabahStatus((syncErr) => {
+    if (syncErr) return res.status(500).json({ error: syncErr.message });
+    const { q, status } = req.query;
+    let sql    = 'SELECT * FROM nasabah WHERE 1=1';
+    const params = [];
 
-  if (q) {
-    sql += ' AND (nama LIKE ? OR kode LIKE ? OR telepon LIKE ?)';
-    params.push(`%${q}%`, `%${q}%`, `%${q}%`);
-  }
-  if (status) {
-    sql += ' AND status = ?';
-    params.push(status);
-  }
-  sql += ' ORDER BY id DESC';
+    if (q) {
+      sql += ' AND (nama LIKE ? OR kode LIKE ? OR telepon LIKE ?)';
+      params.push(`%${q}%`, `%${q}%`, `%${q}%`);
+    }
+    if (status) {
+      sql += ' AND status = ?';
+      params.push(status);
+    }
+    sql += ' ORDER BY kode ASC';
 
-  db.all(sql, params, (err, rows) => {
-    if (err) return res.status(500).json({ error: err.message });
-    res.json({ data: rows, total: rows.length });
+    db.all(sql, params, (err, rows) => {
+      if (err) return res.status(500).json({ error: err.message });
+      res.json({ data: rows, total: rows.length });
+    });
+  });
+});
+
+// GET /api/nasabah/setoran-minggu-ini
+app.get('/api/nasabah/setoran-minggu-ini', authMiddleware, (req, res) => {
+  db.all(
+    `SELECT nasabah_id, COUNT(*) as total
+     FROM transaksi
+     WHERE status='Selesai'
+       AND tanggal >= date('now', '-' || ((strftime('%w','now') + 6) % 7) || ' days')
+     GROUP BY nasabah_id`,
+    [], (err, rows) => {
+      if (err) return res.status(500).json({ error: err.message });
+      res.json({ data: rows });
+    }
+  );
+});
+
+// GET /api/nasabah/stats
+app.get('/api/nasabah/stats', authMiddleware, (req, res) => {
+  syncNasabahStatus((syncErr) => {
+    if (syncErr) return res.status(500).json({ error: syncErr.message });
+    db.get(
+      `SELECT COUNT(*) as total,
+              SUM(CASE WHEN status='Aktif' THEN 1 ELSE 0 END) as aktif,
+              SUM(CASE WHEN created_at >= date('now', 'start of month') THEN 1 ELSE 0 END) as baru_bulan_ini,
+              SUM(CASE WHEN status='Tidak Aktif' THEN 1 ELSE 0 END) as tidak_aktif
+       FROM nasabah`,
+      [], (err, row) => {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json({ data: row || { total: 0, aktif: 0, baru_bulan_ini: 0, tidak_aktif: 0 } });
+      }
+    );
   });
 });
 
@@ -185,9 +240,9 @@ app.post('/api/nasabah', authMiddleware, (req, res) => {
   const { nama, telepon, alamat, saldo = 0, poin = 0, status = 'Aktif' } = req.body;
   if (!nama) return res.status(400).json({ error: 'Nama wajib diisi' });
 
-  db.get('SELECT COUNT(*) as cnt FROM nasabah', [], (err, row) => {
+  db.get("SELECT COALESCE(MAX(CAST(REPLACE(kode, 'NK.', '') AS INTEGER)), 0) + 1 as next FROM nasabah", [], (err, row) => {
     if (err) return res.status(500).json({ error: err.message });
-    const kode = generateKode('NS', row.cnt + 1);
+    const kode = `NK.${String(row.next).padStart(3, '0')}`;
 
     db.run(
       `INSERT INTO nasabah (kode, nama, telepon, alamat, saldo, poin, status) VALUES (?,?,?,?,?,?,?)`,
@@ -356,11 +411,89 @@ app.post('/api/transaksi', authMiddleware, (req, res) => {
             [total, poin_dapat, nasabah_id]
           );
 
+          db.run(`UPDATE nasabah SET status='Aktif', updated_at=CURRENT_TIMESTAMP WHERE id=?`, [nasabah_id]);
+
           res.status(201).json({ message: 'Transaksi berhasil disimpan', id: this.lastID, kode, total, poin_dapat });
         }
       );
     });
   });
+});
+
+// POST /api/transaksi/batch
+app.post('/api/transaksi/batch', authMiddleware, async (req, res) => {
+  const { nasabah_id, tanggal, catatan, items = [], lainnya } = req.body;
+  if (!nasabah_id || !tanggal || (!items.length && !(lainnya && lainnya.berat_kg))) {
+    return res.status(400).json({ error: 'Nasabah, tanggal, dan minimal satu berat wajib diisi' });
+  }
+
+  try {
+    const jenisRows = await new Promise((resolve, reject) => {
+      db.all('SELECT * FROM jenis_sampah WHERE aktif = 1', [], (err, rows) => err ? reject(err) : resolve(rows));
+    });
+    const validItems = items
+      .map(item => ({ jenis: jenisRows.find(row => row.id === Number(item.jenis_id)), berat: Number(item.berat_kg) }))
+      .filter(item => item.jenis && item.berat > 0);
+
+    if (lainnya && Number(lainnya.berat_kg) > 0 && lainnya.jenis && Number(lainnya.harga_kg) > 0) {
+      const hargaLainnya = Number(lainnya.harga_kg);
+      let lainnyaJenis = jenisRows.find(row => row.nama === lainnya.jenis);
+      if (!lainnyaJenis) {
+        lainnyaJenis = await new Promise((resolve, reject) => db.get(
+          'SELECT * FROM jenis_sampah WHERE nama = ?', [lainnya.jenis], (err, row) => err ? reject(err) : resolve(row)
+        ));
+      }
+      if (!lainnyaJenis) {
+        const result = await new Promise((resolve, reject) => db.run(
+          `INSERT INTO jenis_sampah (nama, ikon, kategori, harga_kg, poin_kg, aktif) VALUES (?, '♻️', 'Lainnya', ?, 1, 1)`,
+          [lainnya.jenis, hargaLainnya],
+          function(err) { err ? reject(err) : resolve({ id: this.lastID }); }
+        ));
+        lainnyaJenis = { id: result.id, nama: lainnya.jenis, harga_kg: hargaLainnya, poin_kg: 1 };
+      } else {
+        await new Promise((resolve, reject) => db.run(
+          `UPDATE jenis_sampah SET harga_kg=?, aktif=1, updated_at=CURRENT_TIMESTAMP WHERE id=?`,
+          [hargaLainnya, lainnyaJenis.id], err => err ? reject(err) : resolve()
+        ));
+        lainnyaJenis.harga_kg = hargaLainnya;
+      }
+      validItems.push({
+        jenis: lainnyaJenis,
+        berat: Number(lainnya.berat_kg), lainnya: true
+      });
+    }
+    if (!validItems.length) return res.status(400).json({ error: 'Minimal satu berat harus lebih dari 0' });
+
+    const nextId = await new Promise((resolve, reject) => {
+      db.get('SELECT COUNT(*) as total FROM transaksi', [], (err, row) => err ? reject(err) : resolve(row.total));
+    });
+    const nasabah = await new Promise((resolve, reject) => {
+      db.get('SELECT id FROM nasabah WHERE id = ?', [nasabah_id], (err, row) => err ? reject(err) : resolve(row));
+    });
+    if (!nasabah) return res.status(404).json({ error: 'Nasabah tidak ditemukan' });
+
+    await new Promise((resolve, reject) => db.run('BEGIN TRANSACTION', err => err ? reject(err) : resolve()));
+    let sequence = nextId;
+    let totalSaldo = 0;
+    for (const item of validItems) {
+      const total = item.berat * item.jenis.harga_kg;
+      const kode = generateKode('TR', ++sequence);
+      await new Promise((resolve, reject) => db.run(
+        `INSERT INTO transaksi (kode, nasabah_id, jenis_id, berat_kg, harga_kg, total, poin_dapat, catatan, tanggal)
+         VALUES (?,?,?,?,?,?,?,?,?)`,
+        [kode, nasabah_id, item.lainnya ? null : item.jenis.id, item.berat, item.jenis.harga_kg, total,
+          Math.floor(item.jenis.poin_kg * item.berat), catatan, tanggal],
+        err => err ? reject(err) : resolve()
+      ));
+      totalSaldo += total;
+    }
+    await new Promise((resolve, reject) => db.run('UPDATE nasabah SET saldo = saldo + ?, status = \'Aktif\', updated_at=CURRENT_TIMESTAMP WHERE id=?', [totalSaldo, nasabah_id], err => err ? reject(err) : resolve()));
+    await new Promise((resolve, reject) => db.run('COMMIT', err => err ? reject(err) : resolve()));
+    res.status(201).json({ message: 'Setoran berhasil disimpan', total: totalSaldo, jumlah: validItems.length });
+  } catch (err) {
+    db.run('ROLLBACK');
+    res.status(500).json({ error: err.message });
+  }
 });
 
 // PUT /api/transaksi/:id/status
@@ -375,6 +508,29 @@ app.put('/api/transaksi/:id/status', authMiddleware, (req, res) => {
       res.json({ message: 'Status transaksi diperbarui' });
     }
   );
+});
+
+// DELETE /api/transaksi/batch
+app.delete('/api/transaksi/batch', authMiddleware, (req, res) => {
+  const ids = Array.isArray(req.body.ids) ? req.body.ids.map(Number).filter(Boolean) : [];
+  if (!ids.length) return res.status(400).json({ error: 'Transaksi tidak dipilih' });
+  const placeholders = ids.map(() => '?').join(',');
+
+  db.serialize(() => {
+    db.run('BEGIN TRANSACTION');
+    db.all(`SELECT nasabah_id, SUM(total) as total FROM transaksi WHERE id IN (${placeholders}) GROUP BY nasabah_id`, ids, (err, rows) => {
+      if (err) return db.run('ROLLBACK', () => res.status(500).json({ error: err.message }));
+      db.run(`DELETE FROM transaksi WHERE id IN (${placeholders})`, ids, function(deleteErr) {
+        if (deleteErr) return db.run('ROLLBACK', () => res.status(500).json({ error: deleteErr.message }));
+        const deletedCount = this.changes;
+        rows.forEach(row => db.run('UPDATE nasabah SET saldo = MAX(0, saldo - ?), updated_at=CURRENT_TIMESTAMP WHERE id=?', [row.total, row.nasabah_id]));
+        db.run('COMMIT', commitErr => {
+          if (commitErr) return res.status(500).json({ error: commitErr.message });
+          res.json({ message: `${deletedCount} setoran dihapus`, deletedCount });
+        });
+      });
+    });
+  });
 });
 
 // DELETE /api/transaksi/:id
@@ -465,11 +621,28 @@ app.get('/api/dashboard', authMiddleware, (req, res) => {
         [], (err, row) => { stats.total_nasabah = row?.total || 0; resolve(); }
       );
     }),
-    // Transaksi hari ini
+    // Total sampah sepanjang waktu (kg)
     new Promise((resolve) => {
       db.get(
-        `SELECT COUNT(*) as total FROM transaksi WHERE tanggal = date('now')`,
-        [], (err, row) => { stats.transaksi_hari_ini = row?.total || 0; resolve(); }
+        `SELECT COALESCE(SUM(berat_kg),0) as total FROM transaksi WHERE status='Selesai'`,
+        [], (err, row) => { stats.total_sampah_semua = row?.total || 0; resolve(); }
+      );
+    }),
+    // Total sampah minggu ini (kg), dihitung mulai Senin
+    new Promise((resolve) => {
+      db.get(
+        `SELECT COALESCE(SUM(berat_kg),0) as total FROM transaksi
+         WHERE status='Selesai'
+           AND tanggal >= date('now', '-' || ((strftime('%w','now') + 6) % 7) || ' days')`,
+        [], (err, row) => { stats.total_sampah_minggu_ini = row?.total || 0; resolve(); }
+      );
+    }),
+    // Transaksi minggu ini, dihitung mulai Senin
+    new Promise((resolve) => {
+      db.get(
+        `SELECT COUNT(*) as total FROM transaksi
+         WHERE tanggal >= date('now', '-' || ((strftime('%w','now') + 6) % 7) || ' days')`,
+        [], (err, row) => { stats.transaksi_minggu_ini = row?.total || 0; resolve(); }
       );
     }),
     // Total saldo semua nasabah

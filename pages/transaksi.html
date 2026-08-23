@@ -112,8 +112,10 @@
             <label class="form-label">Jenis Sampah</label>
             <select class="form-control" id="filterJenisTr" onchange="applyFilter()">
               <option value="">Semua Jenis</option>
-              <option>Plastik</option><option>Kertas</option><option>Logam</option>
-              <option>Organik</option><option>Elektronik</option><option>Kaca</option>
+              <option>Gelas Plastik</option><option>Botol Plastik</option><option>Kardus</option>
+              <option>Kaleng</option><option>Gebrus</option><option>Besi 1</option><option>Besi 2</option>
+              <option>Duplek</option><option>Kertas HVS</option><option>Kertas Buram</option><option>Buku</option>
+              <option>Plastik Keras</option><option>Aluminium</option>
             </select>
           </div>
           <div>
@@ -270,7 +272,7 @@
     }
 
     data.forEach((t) => {
-      const jenisKey = (t.jenis_nama||'').toLowerCase();
+      const jenisKey = (t.jenis_nama||'').toLowerCase().replace(/\s+/g, '-');
       const sc       = scT[t.status] || 'info';
       const tr = document.createElement('tr');
       tr.innerHTML = `

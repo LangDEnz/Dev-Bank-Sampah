@@ -58,7 +58,7 @@
       </div>
       <div class="topbar-right">
         <button class="topbar-btn">🔔<span class="badge">3</span></button>
-        <button class="btn btn-primary" onclick="openModal('modalNasabah')">＋ Tambah Nasabah</button>
+        <button class="btn btn-primary" onclick="openNasabahModal()">＋ Tambah Nasabah</button>
       </div>
     </header>
 
@@ -100,22 +100,21 @@
         <div class="search-bar">
           <div class="search-input-wrap">
             <span class="search-icon">🔍</span>
-            <input type="text" id="searchNasabah" placeholder="Cari nama, ID, atau nomor telepon..." oninput="applyFilterNasabah()">
+            <input type="text" id="searchNasabah" placeholder="Cari nama, No. Kartu, atau nomor telepon..." oninput="applyFilterNasabah()">
           </div>
           <button class="btn btn-outline btn-sm">⬇️ Export</button>
-          <button class="btn btn-primary" onclick="openModal('modalNasabah')">＋ Tambah</button>
+          <button class="btn btn-primary" onclick="openNasabahModal()">＋ Tambah</button>
         </div>
 
         <div class="table-wrapper">
           <table>
             <thead>
               <tr>
-                <th>ID</th>
+                <th>No. Kartu</th>
                 <th>Nama</th>
                 <th>Telepon</th>
                 <th>Alamat</th>
                 <th>Saldo Tabungan</th>
-                <th>Poin</th>
                 <th>Status</th>
                 <th>Aksi</th>
               </tr>
@@ -146,10 +145,10 @@
       <button class="modal-close" onclick="closeModal('modalNasabah')">✕</button>
     </div>
 
-    <form id="formNasabah">
+    <form id="formNasabah" onsubmit="event.preventDefault(); simpanNasabah();">
       <div class="grid-2">
         <div class="form-group">
-          <label class="form-label">ID Nasabah</label>
+          <label class="form-label">No. Kartu</label>
           <input type="text" class="form-control" id="inputId" placeholder="Otomatis" readonly
                  style="background:#f5f5f5;">
         </div>
@@ -174,7 +173,7 @@
         <label class="form-label">Nomor Telepon <span style="color:red">*</span></label>
         <div class="input-group">
           <span class="input-icon">📱</span>
-          <input type="tel" class="form-control" id="inputTelepon" placeholder="08xx-xxxx-xxxx" required>
+          <input type="tel" class="form-control" id="inputTelepon" placeholder="08xx-xxxx-xxxx" inputmode="numeric" pattern="[0-9]+" oninput="this.value = this.value.replace(/\D/g, '')" required>
         </div>
       </div>
 
@@ -191,19 +190,12 @@
             <input type="number" class="form-control" id="inputSaldo" value="0" min="0">
           </div>
         </div>
-        <div class="form-group">
-          <label class="form-label">Poin Awal</label>
-          <div class="input-group">
-            <span class="input-icon">⭐</span>
-            <input type="number" class="form-control" id="inputPoin" value="0" min="0">
-          </div>
-        </div>
       </div>
     </form>
 
     <div class="modal-footer">
       <button class="btn btn-outline" onclick="closeModal('modalNasabah')">Batal</button>
-      <button class="btn btn-primary" onclick="simpanNasabah()">💾 Simpan</button>
+      <button type="submit" form="formNasabah" class="btn btn-primary">💾 Simpan</button>
     </div>
   </div>
 </div>
@@ -222,11 +214,26 @@
   </div>
 </div>
 
-<script src="../js/api.js"></script>
+<script src="../js/api.js?v=2"></script>
 <script src="../js/app.js"></script>
 <script>
   let editingId  = null;   // ID database dari nasabah yang sedang diedit
   let allNasabah = [];     // cache data dari API
+  let setoranMingguIni = {};
+
+  function getNextNoKartu() {
+    const nomorTerakhir = allNasabah.reduce((max, nasabah) => {
+      const nomor = Number((nasabah.kode || '').replace(/^NK\./, '')) || 0;
+      return Math.max(max, nomor);
+    }, 0);
+    return `NK.${String(nomorTerakhir + 1).padStart(3, '0')}`;
+  }
+
+  function openNasabahModal() {
+    resetForm();
+    document.getElementById('inputId').value = getNextNoKartu();
+    openModal('modalNasabah');
+  }
 
   // ---- LOAD DATA DARI DATABASE ----
   async function loadNasabah() {
@@ -238,6 +245,16 @@
       if (status) params.status = status;
       const res = await NasabahAPI.getAll(params);
       allNasabah = res.data || [];
+      const setoranRes = await NasabahAPI.getWeeklyDeposits();
+      setoranMingguIni = Object.fromEntries((setoranRes.data || []).map(row => [row.nasabah_id, row.total]));
+      const statsRes = await NasabahAPI.getStats();
+      const stats = statsRes.data || {};
+      const statCards = document.querySelectorAll('.stat-info h3');
+      if (statCards[0]) statCards[0].textContent = stats.total || 0;
+      if (statCards[1]) statCards[1].textContent = stats.aktif || 0;
+      if (statCards[2]) statCards[2].textContent = stats.baru_bulan_ini || 0;
+      if (statCards[3]) statCards[3].textContent = stats.tidak_aktif || 0;
+      if (editingId === null) document.getElementById('inputId').value = getNextNoKartu();
       renderNasabah(allNasabah);
     } catch (err) {
       showToast('Gagal memuat data nasabah: ' + err.message, 'danger');
@@ -248,7 +265,7 @@
     const tbody = document.getElementById('nasabahTable');
     tbody.innerHTML = '';
     if (data.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; padding:40px; color:var(--text-muted);">Tidak ada nasabah ditemukan</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; padding:40px; color:var(--text-muted);">Tidak ada nasabah ditemukan</td></tr>`;
       document.getElementById('paginasiNasabah').textContent = '0 nasabah';
       return;
     }
@@ -265,12 +282,10 @@
         <td>${n.telepon || '—'}</td>
         <td style="max-width:180px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${n.alamat || '—'}</td>
         <td><strong style="color:var(--primary);">${formatRupiah(n.saldo)}</strong></td>
-        <td><span style="background:#fff8e1;color:#e65100;padding:3px 10px;border-radius:20px;font-size:12px;font-weight:600;">⭐ ${n.poin}</span></td>
         <td><span class="badge-status ${n.status === 'Aktif' ? 'success' : 'danger'}">● ${n.status}</span></td>
         <td>
-          <button class="btn-icon" title="Detail" onclick="detailNasabah(${n.id})">👁️</button>
-          <button class="btn-icon" title="Edit" style="margin:0 4px;" onclick="editNasabah(${n.id})">✏️</button>
-          <button class="btn-icon" title="Hapus" onclick="hapusNasabah(${n.id},'${n.nama}')">🗑️</button>
+          <strong style="color:var(--primary);">${setoranMingguIni[n.id] || 0} kali</strong>
+          <button class="btn-icon" title="Hapus nasabah" style="margin-left:8px;" onclick="hapusNasabah(${n.id},'${n.nama}')">🗑️</button>
         </td>
       `;
       tbody.appendChild(tr);
@@ -289,7 +304,6 @@
     const telepon = document.getElementById('inputTelepon').value.trim();
     const alamat  = document.getElementById('inputAlamat').value.trim();
     const saldo   = parseFloat(document.getElementById('inputSaldo').value) || 0;
-    const poin    = parseInt(document.getElementById('inputPoin').value)  || 0;
     const status  = document.getElementById('inputStatus').value;
 
     if (!nama || !telepon) {
@@ -299,10 +313,10 @@
 
     try {
       if (editingId !== null) {
-        await NasabahAPI.update(editingId, { nama, telepon, alamat, saldo, poin, status });
+        await NasabahAPI.update(editingId, { nama, telepon, alamat, saldo, status });
         showToast('Data nasabah berhasil diperbarui!', 'success');
       } else {
-        await NasabahAPI.create({ nama, telepon, alamat, saldo, poin, status });
+        await NasabahAPI.create({ nama, telepon, alamat, saldo, status });
         showToast('Nasabah baru berhasil ditambahkan!', 'success');
       }
       closeModal('modalNasabah');
@@ -324,7 +338,6 @@
     document.getElementById('inputTelepon').value = n.telepon || '';
     document.getElementById('inputAlamat').value  = n.alamat  || '';
     document.getElementById('inputSaldo').value   = n.saldo;
-    document.getElementById('inputPoin').value    = n.poin;
     document.getElementById('inputStatus').value  = n.status;
     openModal('modalNasabah');
   }
@@ -364,7 +377,6 @@
         <div><span style="color:var(--text-muted); font-size:11px;">ID NASABAH</span><br><strong>${n.kode}</strong></div>
         <div><span style="color:var(--text-muted); font-size:11px;">TELEPON</span><br><strong>${n.telepon || '—'}</strong></div>
         <div><span style="color:var(--text-muted); font-size:11px;">SALDO TABUNGAN</span><br><strong style="color:var(--primary); font-size:16px;">${formatRupiah(n.saldo)}</strong></div>
-        <div><span style="color:var(--text-muted); font-size:11px;">POIN</span><br><strong>⭐ ${n.poin} poin</strong></div>
         <div style="grid-column:span 2;"><span style="color:var(--text-muted); font-size:11px;">ALAMAT</span><br><strong>${n.alamat || '—'}</strong></div>
         <div><span style="color:var(--text-muted); font-size:11px;">TOTAL TRANSAKSI</span><br><strong>${trCount} kali</strong></div>
         <div><span style="color:var(--text-muted); font-size:11px;">TOTAL SETORAN</span><br><strong style="color:var(--primary);">${formatRupiah(trTotal)}</strong></div>
@@ -379,7 +391,6 @@
     document.getElementById('inputTelepon').value = '';
     document.getElementById('inputAlamat').value  = '';
     document.getElementById('inputSaldo').value   = '0';
-    document.getElementById('inputPoin').value    = '0';
     document.getElementById('inputStatus').value  = 'Aktif';
     document.getElementById('modalNasabahTitle').textContent = '👤 Tambah Nasabah Baru';
     editingId = null;

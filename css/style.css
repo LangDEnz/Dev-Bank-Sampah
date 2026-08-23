@@ -951,6 +951,33 @@ tbody tr:last-child {
 .trash-tag.organik { background: #e8f5e9; color: #1b5e20; }
 .trash-tag.elektronik { background: #f3e5f5; color: #4a148c; }
 .trash-tag.kaca    { background: #e0f7fa; color: #006064; }
+.trash-tag.gelas-plastik { background: #e3f2fd; color: #1565c0; }
+.trash-tag.botol-plastik { background: #e8f5e9; color: #2e7d32; }
+.trash-tag.kardus { background: #fff3e0; color: #e65100; }
+.trash-tag.kaleng { background: #fff8e1; color: #f57f17; }
+.trash-tag.gebrus { background: #e8f5e9; color: #1b5e20; }
+.trash-tag.besi-1, .trash-tag.besi-2 { background: #eceff1; color: #455a64; }
+.trash-tag.duplek { background: #fff3e0; color: #bf360c; }
+.trash-tag.kertas-hvs { background: #e1f5fe; color: #0277bd; }
+.trash-tag.kertas-buram { background: #fff8e1; color: #795548; }
+.trash-tag.buku { background: #f3e5f5; color: #6a1b9a; }
+.trash-tag.plastik-keras { background: #e0f7fa; color: #006064; }
+.trash-tag.aluminium { background: #f5f5f5; color: #616161; }
+.trash-icon { width: 42px; height: 32px; object-fit: contain; vertical-align: middle; }
+.setor-rekap-wrapper table { min-width: 1500px; }
+.setor-rekap-wrapper th, .setor-rekap-wrapper td { white-space: nowrap; text-align: center; }
+.setor-rekap-wrapper th:nth-child(3), .setor-rekap-wrapper td:nth-child(3) { text-align: left; }
+.setor-jenis-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+.setor-modal { width: 900px; max-height: calc(100vh - 24px); padding: 24px; overflow-y: auto; }
+.setor-modal .modal-footer { position: sticky; bottom: -24px; background: #fff; margin-left: -24px; margin-right: -24px; padding: 16px 24px 0; }
+.setor-jenis-item { display: grid; grid-template-columns: 34px 1fr; gap: 1px 6px; align-items: center; padding: 7px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: #fafdf8; }
+.setor-jenis-code { grid-row: span 2; font-weight: 700; color: var(--primary); }
+.setor-jenis-name { font-size: 11px; font-weight: 600; }
+.setor-jenis-price { font-size: 10px; color: var(--text-muted); }
+.setor-jenis-input { grid-column: 2; width: 100%; padding: 5px 7px; font-size: 12px; }
+.setor-lainnya .grid-3 { align-items: center; }
+@media (max-width: 900px) { .setor-jenis-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (max-width: 560px) { .setor-jenis-grid { grid-template-columns: 1fr; } }
 
 /* ===================================
    TOAST NOTIFICATION

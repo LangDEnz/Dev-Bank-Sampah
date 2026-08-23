@@ -88,7 +88,7 @@ async function getOrCreateNasabah(card, name, names) {
   let found = rows.find(row => normalizeName(row.nama) === normalized || (normalized === 'gilang n' && normalizeName(row.nama) === 'gilang'));
   if (!found) {
     const next = await query('SELECT COALESCE(MAX(id), 0) + 1 AS id FROM nasabah');
-    const kode = `NS${String(next[0].id).padStart(3, '0')}`;
+    const kode = `NK.${String(next[0].id).padStart(3, '0')}`;
     const result = await run('INSERT INTO nasabah (kode, nama, status) VALUES (?, ?, ?)', [kode, name, 'Aktif']);
     found = { id: result.lastID, nama: name };
   }
