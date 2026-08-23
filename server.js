@@ -394,9 +394,9 @@ app.post('/api/transaksi', authMiddleware, (req, res) => {
     const total      = harga_kg * berat_kg;
     const poin_dapat = Math.floor(jenis.poin_kg * berat_kg);
 
-    db.get('SELECT COUNT(*) as cnt FROM transaksi', [], (err, row) => {
+    db.get("SELECT COALESCE(MAX(CAST(REPLACE(kode, 'TR', '') AS INTEGER)), 0) + 1 as next FROM transaksi", [], (err, row) => {
       if (err) return res.status(500).json({ error: err.message });
-      const kode = generateKode('TR', row.cnt + 1);
+      const kode = generateKode('TR', row.next);
 
       db.run(
         `INSERT INTO transaksi (kode, nasabah_id, jenis_id, berat_kg, harga_kg, total, poin_dapat, catatan, tanggal)
@@ -435,8 +435,14 @@ app.post('/api/transaksi/batch', authMiddleware, async (req, res) => {
       .map(item => ({ jenis: jenisRows.find(row => row.id === Number(item.jenis_id)), berat: Number(item.berat_kg) }))
       .filter(item => item.jenis && item.berat > 0);
 
-    if (lainnya && Number(lainnya.berat_kg) > 0 && lainnya.jenis && Number(lainnya.harga_kg) > 0) {
-      const hargaLainnya = Number(lainnya.harga_kg);
+    if (lainnya && Number(lainnya.berat_kg) > 0 && lainnya.jenis &&
+        ((Number(lainnya.total) || 0) > 0 || (Number(lainnya.harga_kg) || 0) > 0)) {
+      const beratLainnya = Number(lainnya.berat_kg);
+      const totalManual  = Number(lainnya.total) || 0;
+      const hargaPerKg   = Number(lainnya.harga_kg) || 0;
+      // Harga/kg acuan utk catatan jenis: pakai harga_kg bila ada, kalau hanya total -> rata-rata
+      const hargaAcuan   = hargaPerKg > 0 ? hargaPerKg : totalManual / beratLainnya;
+
       let lainnyaJenis = jenisRows.find(row => row.nama === lainnya.jenis);
       if (!lainnyaJenis) {
         lainnyaJenis = await new Promise((resolve, reject) => db.get(
@@ -446,26 +452,27 @@ app.post('/api/transaksi/batch', authMiddleware, async (req, res) => {
       if (!lainnyaJenis) {
         const result = await new Promise((resolve, reject) => db.run(
           `INSERT INTO jenis_sampah (nama, ikon, kategori, harga_kg, poin_kg, aktif) VALUES (?, '♻️', 'Lainnya', ?, 1, 1)`,
-          [lainnya.jenis, hargaLainnya],
+          [lainnya.jenis, hargaAcuan],
           function(err) { err ? reject(err) : resolve({ id: this.lastID }); }
         ));
-        lainnyaJenis = { id: result.id, nama: lainnya.jenis, harga_kg: hargaLainnya, poin_kg: 1 };
+        lainnyaJenis = { id: result.id, nama: lainnya.jenis, harga_kg: hargaAcuan, poin_kg: 1 };
       } else {
         await new Promise((resolve, reject) => db.run(
           `UPDATE jenis_sampah SET harga_kg=?, aktif=1, updated_at=CURRENT_TIMESTAMP WHERE id=?`,
-          [hargaLainnya, lainnyaJenis.id], err => err ? reject(err) : resolve()
+          [hargaAcuan, lainnyaJenis.id], err => err ? reject(err) : resolve()
         ));
-        lainnyaJenis.harga_kg = hargaLainnya;
+        lainnyaJenis.harga_kg = hargaAcuan;
       }
       validItems.push({
         jenis: lainnyaJenis,
-        berat: Number(lainnya.berat_kg), lainnya: true
+        berat: beratLainnya, lainnya: true,
+        totalOverride: totalManual > 0 ? totalManual : null
       });
     }
     if (!validItems.length) return res.status(400).json({ error: 'Minimal satu berat harus lebih dari 0' });
 
     const nextId = await new Promise((resolve, reject) => {
-      db.get('SELECT COUNT(*) as total FROM transaksi', [], (err, row) => err ? reject(err) : resolve(row.total));
+      db.get("SELECT COALESCE(MAX(CAST(REPLACE(kode, 'TR', '') AS INTEGER)), 0) as maks FROM transaksi", [], (err, row) => err ? reject(err) : resolve(row.maks));
     });
     const nasabah = await new Promise((resolve, reject) => {
       db.get('SELECT id FROM nasabah WHERE id = ?', [nasabah_id], (err, row) => err ? reject(err) : resolve(row));
@@ -476,12 +483,12 @@ app.post('/api/transaksi/batch', authMiddleware, async (req, res) => {
     let sequence = nextId;
     let totalSaldo = 0;
     for (const item of validItems) {
-      const total = item.berat * item.jenis.harga_kg;
+      const total = item.totalOverride != null ? item.totalOverride : item.berat * item.jenis.harga_kg;
       const kode = generateKode('TR', ++sequence);
       await new Promise((resolve, reject) => db.run(
         `INSERT INTO transaksi (kode, nasabah_id, jenis_id, berat_kg, harga_kg, total, poin_dapat, catatan, tanggal)
          VALUES (?,?,?,?,?,?,?,?,?)`,
-        [kode, nasabah_id, item.lainnya ? null : item.jenis.id, item.berat, item.jenis.harga_kg, total,
+        [kode, nasabah_id, item.jenis.id, item.berat, item.jenis.harga_kg, total,
           Math.floor(item.jenis.poin_kg * item.berat), catatan, tanggal],
         err => err ? reject(err) : resolve()
       ));
@@ -571,9 +578,9 @@ app.post('/api/penarikan', authMiddleware, (req, res) => {
     if (err || !nasabah) return res.status(400).json({ error: 'Nasabah tidak ditemukan' });
     if (nasabah.saldo < jumlah) return res.status(400).json({ error: 'Saldo tidak mencukupi' });
 
-    db.get('SELECT COUNT(*) as cnt FROM penarikan', [], (err, row) => {
+    db.get("SELECT COALESCE(MAX(CAST(REPLACE(kode, 'WD', '') AS INTEGER)), 0) + 1 as next FROM penarikan", [], (err, row) => {
       if (err) return res.status(500).json({ error: err.message });
-      const kode = generateKode('WD', row.cnt + 1);
+      const kode = generateKode('WD', row.next);
 
       db.run(
         `INSERT INTO penarikan (kode, nasabah_id, jumlah, metode, catatan, tanggal) VALUES (?,?,?,?,?,?)`,
