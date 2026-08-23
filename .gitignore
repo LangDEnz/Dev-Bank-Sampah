@@ -1,0 +1,12 @@
+# Dependensi
+node_modules/
+
+# Database runtime & backup (dibuat otomatis saat server berjalan)
+database/*.db
+database/*.db-journal
+database/*.db-shm
+database/*.db-wal
+
+# Log & environment
+*.log
+.env
