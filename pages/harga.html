@@ -143,38 +143,44 @@
 <script src="../js/api.js"></script>
 <script src="../js/app.js"></script>
 <script>
-  let daftarHarga = [
-    { jenis:'Gelas Plastik', ikon:'🥤', kategori:'Anorganik', harga:1500, poin:1, aktif:true },
-    { jenis:'Botol Plastik', ikon:'🧴', kategori:'Anorganik', harga:1500, poin:1, aktif:true },
-    { jenis:'Kardus', ikon:'📦', kategori:'Anorganik', harga:1300, poin:1, aktif:true },
-    { jenis:'Kaleng', ikon:'🥫', kategori:'Anorganik', harga:500, poin:1, aktif:true },
-    { jenis:'Gebrus', ikon:'♻️', kategori:'Anorganik', harga:500, poin:1, aktif:true },
-    { jenis:'Besi 1', ikon:'🔩', kategori:'Logam', harga:2500, poin:1, aktif:true },
-    { jenis:'Besi 2', ikon:'🔧', kategori:'Logam', harga:2000, poin:1, aktif:true },
-    { jenis:'Duplek', ikon:'<img src="../assets/duplek-box.svg" alt="Duplek" class="trash-icon">', kategori:'Kertas', harga:450, poin:1, aktif:true },
-    { jenis:'Kertas HVS', ikon:'📃', kategori:'Kertas', harga:1100, poin:1, aktif:true },
-    { jenis:'Kertas Buram', ikon:'📰', kategori:'Kertas', harga:500, poin:1, aktif:true },
-    { jenis:'Buku', ikon:'📚', kategori:'Kertas', harga:1000, poin:1, aktif:true },
-    { jenis:'Plastik Keras', ikon:'🪣', kategori:'Anorganik', harga:800, poin:1, aktif:true },
-    { jenis:'Aluminium', ikon:'<img src="../assets/aluminium-stack.svg" alt="Aluminium" class="trash-icon">', kategori:'Logam', harga:20000, poin:1, aktif:true },
-  ];
-  let editingHargaIdx = null;
+<script src="../js/api.js"></script>
+<script src="../js/app.js"></script>
+<script>
+  let allJenisData = [];
+  let editingJenisId = null;
 
-  function renderHarga() {
+  // ---- LOAD DARI DATABASE ----
+  async function loadHarga() {
+    try {
+      const res    = await JenisAPI.getAll();
+      allJenisData = res.data || [];
+      renderHarga(allJenisData);
+    } catch (err) {
+      showToast('Gagal memuat data harga: ' + err.message, 'danger');
+    }
+  }
+
+  function renderHarga(data) {
     // Grid cards
     const grid = document.getElementById('hargaGrid');
     grid.innerHTML = '';
-    daftarHarga.forEach((h, idx) => {
+    data.forEach((h) => {
       const card = document.createElement('div');
       card.className = 'card';
       card.style.textAlign = 'center';
       card.innerHTML = `
         <div style="font-size:42px;margin-bottom:8px;">${h.ikon}</div>
-        <div style="font-weight:700;font-size:17px;">${h.jenis}</div>
-        <div style="font-size:22px;font-weight:700;color:var(--primary);margin:10px 0;">${formatRupiah(h.harga)}<span style="font-size:13px;font-weight:400;color:var(--text-muted);">/kg</span></div>
-        <div style="font-size:12px;color:var(--text-muted);margin-bottom:10px;">⭐ ${h.poin} poin/kg</div>
-        <span class="badge-status ${h.aktif?'success':'danger'}" style="margin-bottom:12px;">● ${h.aktif?'Aktif':'Nonaktif'}</span>
-        <div><button class="btn btn-sm btn-outline" onclick="editHarga(${idx})">✏️ Edit Harga</button></div>
+        <div style="font-weight:700;font-size:17px;">${h.nama}</div>
+        <div style="font-size:22px;font-weight:700;color:var(--primary);margin:10px 0;">
+          ${formatRupiah(h.harga_kg)}<span style="font-size:13px;font-weight:400;color:var(--text-muted);">/kg</span>
+        </div>
+        <div style="font-size:12px;color:var(--text-muted);margin-bottom:10px;">⭐ ${h.poin_kg} poin/kg</div>
+        <span class="badge-status ${h.aktif ? 'success' : 'danger'}" style="margin-bottom:12px;">
+          ● ${h.aktif ? 'Aktif' : 'Nonaktif'}
+        </span>
+        <div style="margin-top:8px;">
+          <button class="btn btn-sm btn-outline" onclick="editHarga(${h.id})">✏️ Edit Harga</button>
+        </div>
       `;
       grid.appendChild(card);
     });
@@ -182,63 +188,86 @@
     // Table
     const tbody = document.getElementById('hargaTable');
     tbody.innerHTML = '';
-    daftarHarga.forEach((h, idx) => {
+    data.forEach((h) => {
       const tr = document.createElement('tr');
       tr.innerHTML = `
-        <td><strong>${h.ikon} ${h.jenis}</strong></td>
+        <td><strong>${h.ikon} ${h.nama}</strong></td>
         <td><span style="background:#e8f5e9;color:#2e7d32;padding:3px 10px;border-radius:20px;font-size:12px;">${h.kategori}</span></td>
-        <td><strong style="color:var(--primary);">${formatRupiah(h.harga)}</strong></td>
-        <td>⭐ ${h.poin}</td>
-        <td><span class="badge-status ${h.aktif?'success':'danger'}">● ${h.aktif?'Aktif':'Nonaktif'}</span></td>
+        <td><strong style="color:var(--primary);">${formatRupiah(h.harga_kg)}</strong></td>
+        <td>⭐ ${h.poin_kg}</td>
+        <td><span class="badge-status ${h.aktif ? 'success' : 'danger'}">● ${h.aktif ? 'Aktif' : 'Nonaktif'}</span></td>
         <td>
-          <button class="btn-icon" onclick="editHarga(${idx})">✏️</button>
-          <button class="btn-icon" style="margin-left:4px;" onclick="toggleAktif(${idx})">${h.aktif?'🚫':'✅'}</button>
+          <button class="btn-icon" onclick="editHarga(${h.id})">✏️</button>
+          <button class="btn-icon" style="margin-left:4px;" onclick="toggleAktif(${h.id},${h.aktif})">
+            ${h.aktif ? '🚫' : '✅'}
+          </button>
         </td>
       `;
       tbody.appendChild(tr);
     });
   }
 
-  function editHarga(idx) {
-    editingHargaIdx = idx;
-    const h = daftarHarga[idx];
-    document.getElementById('editHargaTitle').textContent = `✏️ Edit Harga — ${h.jenis}`;
-    document.getElementById('editJenis').value = h.jenis;
-    document.getElementById('editHarga').value = h.harga;
-    document.getElementById('editPoin').value  = h.poin;
+  function editHarga(id) {
+    const h = allJenisData.find(x => x.id === id);
+    if (!h) return;
+    editingJenisId = id;
+    document.getElementById('editHargaTitle').textContent = `✏️ Edit Harga — ${h.nama}`;
+    document.getElementById('editJenis').value = h.nama;
+    document.getElementById('editHarga').value = h.harga_kg;
+    document.getElementById('editPoin').value  = h.poin_kg;
     openModal('modalEditHarga');
   }
 
-  function simpanHarga() {
-    if (editingHargaIdx === null) return;
-    daftarHarga[editingHargaIdx].harga = parseInt(document.getElementById('editHarga').value) || 0;
-    daftarHarga[editingHargaIdx].poin  = parseInt(document.getElementById('editPoin').value) || 0;
-    hargaSampah[daftarHarga[editingHargaIdx].jenis] = daftarHarga[editingHargaIdx].harga;
-    closeModal('modalEditHarga');
-    renderHarga();
-    showToast('Harga berhasil diperbarui!', 'success');
+  async function simpanHarga() {
+    if (!editingJenisId) return;
+    const harga_kg = parseFloat(document.getElementById('editHarga').value) || 0;
+    const poin_kg  = parseInt(document.getElementById('editPoin').value)    || 0;
+    const h = allJenisData.find(x => x.id === editingJenisId);
+    try {
+      await JenisAPI.update(editingJenisId, { harga_kg, poin_kg, aktif: h.aktif });
+      closeModal('modalEditHarga');
+      showToast('Harga berhasil diperbarui!', 'success');
+      loadHarga();
+    } catch (err) {
+      showToast('Gagal menyimpan: ' + err.message, 'danger');
+    }
   }
 
-  function toggleAktif(idx) {
-    daftarHarga[idx].aktif = !daftarHarga[idx].aktif;
-    renderHarga();
-    showToast(`${daftarHarga[idx].jenis} ${daftarHarga[idx].aktif?'diaktifkan':'dinonaktifkan'}`, 'warning');
+  async function toggleAktif(id, currentAktif) {
+    const h = allJenisData.find(x => x.id === id);
+    if (!h) return;
+    const newAktif = currentAktif ? 0 : 1;
+    try {
+      await JenisAPI.update(id, { harga_kg: h.harga_kg, poin_kg: h.poin_kg, aktif: newAktif });
+      showToast(`${h.nama} ${newAktif ? 'diaktifkan' : 'dinonaktifkan'}`, 'warning');
+      loadHarga();
+    } catch (err) {
+      showToast('Gagal mengubah status: ' + err.message, 'danger');
+    }
   }
 
-  function tambahKategori() {
-    const jenis = document.getElementById('newJenis').value.trim();
-    const harga = parseInt(document.getElementById('newHarga').value) || 0;
-    const poin  = parseInt(document.getElementById('newPoin').value) || 0;
-    const ikon  = document.getElementById('newIkon').value || '♻️';
-    if (!jenis) { showToast('Nama jenis sampah wajib diisi!', 'danger'); return; }
-    daftarHarga.push({ jenis, ikon, kategori:'Anorganik', harga, poin, aktif:true });
-    hargaSampah[jenis] = harga;
-    closeModal('modalTambahHarga');
-    renderHarga();
-    showToast(`Kategori ${jenis} berhasil ditambahkan!`, 'success');
+  async function tambahKategori() {
+    const nama     = document.getElementById('newJenis').value.trim();
+    const harga_kg = parseFloat(document.getElementById('newHarga').value) || 0;
+    const poin_kg  = parseInt(document.getElementById('newPoin').value)    || 0;
+    const ikon     = document.getElementById('newIkon').value.trim() || '♻️';
+    if (!nama)     { showToast('Nama jenis sampah wajib diisi!', 'danger'); return; }
+    if (!harga_kg) { showToast('Harga per kg wajib diisi!', 'danger'); return; }
+    try {
+      await JenisAPI.create({ nama, ikon, kategori: 'Anorganik', harga_kg, poin_kg });
+      closeModal('modalTambahHarga');
+      showToast(`Kategori ${nama} berhasil ditambahkan!`, 'success');
+      document.getElementById('newJenis').value = '';
+      document.getElementById('newHarga').value = '';
+      document.getElementById('newPoin').value  = '';
+      document.getElementById('newIkon').value  = '';
+      loadHarga();
+    } catch (err) {
+      showToast('Gagal menambah: ' + err.message, 'danger');
+    }
   }
 
-  document.addEventListener('DOMContentLoaded', renderHarga);
+  document.addEventListener('DOMContentLoaded', loadHarga);
 </script>
 </body>
 </html>
