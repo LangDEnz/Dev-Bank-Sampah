@@ -116,7 +116,7 @@
                 <th>Alamat</th>
                 <th>Saldo Tabungan</th>
                 <th>Status</th>
-                <th></th>
+                <th>Aksi</th>
               </tr>
             </thead>
             <tbody id="nasabahTable"><!-- JS --></tbody>
@@ -285,8 +285,7 @@
         <td><span class="badge-status ${n.status === 'Aktif' ? 'success' : 'danger'}">● ${n.status}</span></td>
         <td>
           <strong style="color:var(--primary);">${setoranMingguIni[n.id] || 0} kali</strong>
-          <button class="btn-icon" title="Edit nasabah" style="margin-left:8px;" onclick="editNasabah(${n.id})">✏️</button>
-          <button class="btn-icon" title="Hapus nasabah" onclick="hapusNasabah(${n.id},'${n.nama}')">🗑️</button>
+          <button class="btn-icon" title="Hapus nasabah" style="margin-left:8px;" onclick="hapusNasabah(${n.id},'${n.nama}')">🗑️</button>
         </td>
       `;
       tbody.appendChild(tr);
