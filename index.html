@@ -22,7 +22,7 @@
     </div>
 
     <p class="brand-tagline">
-      Bersama kami, sampah menjadi nilai. 
+      Bersama kami, sampah menjadi nilai.
       Kelola setoran, tabungan, dan laporan bank sampah Anda dengan mudah.
     </p>
 
@@ -33,11 +33,11 @@
       </div>
       <div class="feature-item">
         <span class="feat-icon">💰</span>
-        <p>Manajemen tabungan & poin nasabah</p>
+        <p>Manajemen tabungan &amp; poin nasabah</p>
       </div>
       <div class="feature-item">
         <span class="feat-icon">📊</span>
-        <p>Laporan & statistik lengkap</p>
+        <p>Laporan &amp; statistik lengkap</p>
       </div>
       <div class="feature-item">
         <span class="feat-icon">🌱</span>
@@ -139,7 +139,7 @@
       </div>
 
       <div class="login-footer">
-        © 2026 Bank Sampah Hijau Lestari &nbsp;|&nbsp; v1.0.0
+        © 2026 Bank Sampah Hijau Lestari &nbsp;|&nbsp; v2.0.0
       </div>
     </div>
   </div>
@@ -187,11 +187,9 @@
       btn.classList.remove('loading');
 
       if (res.ok) {
-        // Simpan token & user ke localStorage
         localStorage.setItem('bs_token', data.token);
         localStorage.setItem('bs_user', JSON.stringify(data.user));
 
-        // Remember me
         if (document.getElementById('rememberMe').checked) {
           localStorage.setItem('bs_remember', JSON.stringify({ username }));
         } else {
@@ -212,7 +210,6 @@
     }
   });
 
-  // Auto-fill if remembered
   window.addEventListener('DOMContentLoaded', () => {
     const saved = localStorage.getItem('bs_remember');
     if (saved) {
@@ -220,7 +217,6 @@
       document.getElementById('username').value = username;
       document.getElementById('rememberMe').checked = true;
     }
-    // Jika sudah login, redirect langsung
     if (localStorage.getItem('bs_token')) {
       window.location.href = 'pages/dashboard.html';
     }

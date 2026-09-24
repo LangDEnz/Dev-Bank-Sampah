@@ -1,12 +1,22 @@
-# Dependensi
+# Dependencies
 node_modules/
 
-# Database runtime & backup (dibuat otomatis saat server berjalan)
-database/*.db
-database/*.db-journal
-database/*.db-shm
-database/*.db-wal
+# Database file (data lokal, jangan dicommit)
+database/banksampah.db
+database/*.before-*.db
 
-# Log & environment
-*.log
+# Environment
 .env
+.env.local
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+
+# Editor
+.vscode/
+*.swp
